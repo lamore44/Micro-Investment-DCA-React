@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg_primary">#FF050507</color>
+    <color name="bg_card">#FF0E0E14</color>
+    <color name="purple_primary">#FF6C47FF</color>
+    <color name="green_positive">#FF00E5A0</color>
+    <color name="red_negative">#FFFF4757</color>
+    <color name="text_primary">#FFE8E8F0</color>
+</resources>

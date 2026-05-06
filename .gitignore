@@ -1,79 +1,37 @@
-# OSX
-.DS_Store
-
-# Xcode
-build/
-*.pbxuser
-!default.pbxuser
-*.mode1v3
-!default.mode1v3
-*.mode2v3
-!default.mode2v3
-*.perspectivev3
-!default.perspectivev3
-xcuserdata
-*.xccheckout
-*.moved-aside
-DerivedData
-*.hmap
-*.ipa
-*.xcuserstate
-**/.xcode.env.local
-
-# Android/IntelliJ
-build/
-.idea
-.gradle
-local.properties
-*.iml
-*.hprof
-.cxx/
-*.keystore
-!debug.keystore
-.kotlin/
-
-# node.js
+# React Native
 node_modules/
-npm-debug.log
-yarn-error.log
+.expo/
+dist/
+npm-debug.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+web-build/
 
-# fastlane
-**/fastlane/report.xml
-**/fastlane/Preview.html
-**/fastlane/screenshots
-**/fastlane/test_output
+# Android
+android/app/build/
+android/.gradle/
+android/local.properties
+android/captures/
+android/.externalNativeBuild/
+android/.cxx/
+android/app/debug.keystore
 
-# Bundle artifact
-*.jsbundle
+# iOS
+ios/build/
+ios/Pods/
+ios/DerivedData/
+ios/Podfile.lock
 
-# Ruby / CocoaPods
-**/Pods/
-/vendor/bundle/
-
-# Temporary files created by Metro
+# Metro
 .metro-health-check*
-.metro/
-.tmp/
-.rn-cli-cache/
-.haste_cache/
 
-# testing
-/coverage
-
-# Environment variables
+# Misc
+.DS_Store
+*.log
 .env
-.env.local
-.env.development
-.env.production
-.env.*.local
-
-# Yarn
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/sdks
-!.yarn/versions
-
-# Patch package (jika dipakai nanti)
-.patch-package/
+.env.*
+coverage/

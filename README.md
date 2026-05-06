@@ -1,97 +1,164 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# MicroDCA — React Native App
 
-# Getting Started
+> A mobile app to simulate, backtest, and project Dollar Cost Averaging (DCA) investment strategies using real historical cryptocurrency market data — without risking any real money.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+---
 
-## Step 1: Start Metro
+## 🚀 Quick Start
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+### Prerequisites
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+| Tool | Version |
+|------|---------|
+| Node.js | ≥ 18 |
+| Java JDK | 17 |
+| Android Studio | Hedgehog or newer |
+| React Native CLI | latest |
 
-```sh
-# Using npm
-npm start
+### Install dependencies
 
-# OR using Yarn
-yarn start
+```bash
+npm install
 ```
 
-## Step 2: Build and run your app
+### Android (via Android Studio or CLI)
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
+```bash
+# Start Metro bundler
+npm start
 
-### Android
-
-```sh
-# Using npm
+# In a second terminal:
 npm run android
-
-# OR using Yarn
-yarn android
 ```
 
 ### iOS
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
-
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
-
-```sh
-bundle install
-```
-
-Then, and every time you update your native dependencies, run:
-
-```sh
-bundle exec pod install
-```
-
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
-
-```sh
-# Using npm
+```bash
+cd ios && pod install && cd ..
 npm run ios
-
-# OR using Yarn
-yarn ios
 ```
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+---
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+## 📁 Project Structure
 
-## Step 3: Modify your app
+```
+MicroDCA/
+├── App.tsx                        # Root component
+├── index.js                       # RN entry point
+├── android/                       # Native Android project
+│   └── app/src/main/
+│       ├── AndroidManifest.xml
+│       └── java/com/oksobatsister/microdca/
+│           ├── MainActivity.kt
+│           └── MainApplication.kt
+└── src/
+    ├── navigation/
+    │   └── AppNavigator.tsx       # Stack + Tab navigator
+    ├── screens/
+    │   ├── Auth/
+    │   │   ├── SplashScreen.tsx
+    │   │   ├── LoginScreen.tsx
+    │   │   └── RegisterScreen.tsx
+    │   ├── Home/
+    │   │   └── HomeScreen.tsx
+    │   ├── Builder/
+    │   │   └── BuilderScreen.tsx
+    │   ├── Backtest/
+    │   │   └── BacktestScreen.tsx
+    │   ├── MonteCarlo/
+    │   │   └── MonteCarloScreen.tsx
+    │   └── Portfolio/
+    │       └── PortfolioScreen.tsx
+    ├── components/
+    │   ├── common/
+    │   │   ├── Button.tsx
+    │   │   ├── Card.tsx
+    │   │   ├── MetricCard.tsx
+    │   │   ├── TextInput.tsx
+    │   │   ├── Badge.tsx
+    │   │   ├── Divider.tsx
+    │   │   ├── LogoBadge.tsx
+    │   │   └── SectionHeader.tsx
+    │   └── charts/
+    │       ├── AreaChartView.tsx  # Custom SVG area chart
+    │       └── MCChartView.tsx    # Monte Carlo band chart
+    ├── hooks/
+    │   ├── useStrategies.ts       # Strategy state management
+    │   └── useSimulation.ts       # Simulation runner
+    ├── data/
+    │   └── mockData.ts            # Mock strategies + generators
+    ├── utils/
+    │   └── formatters.ts          # USD, %, coin formatters
+    └── theme/
+        ├── colors.ts
+        ├── typography.ts
+        ├── spacing.ts
+        └── index.ts
+```
 
-Now that you have successfully run the app, let's make changes!
+---
 
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
+## 🎨 Design System
 
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
+| Token | Value |
+|-------|-------|
+| Background | `#050507` |
+| Card | `#0E0E14` |
+| Purple Primary | `#6C47FF` |
+| Green (positive) | `#00E5A0` |
+| Red (negative) | `#FF4757` |
+| Violet accent | `#A78BFA` |
+| Muted text | `#5C5C7A` |
 
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
+---
 
-## Congratulations! :tada:
+## 📱 Screens
 
-You've successfully run and modified your React Native App. :partying_face:
+| Screen | Description |
+|--------|-------------|
+| **Splash** | Animated logo intro → auto-navigates to Login |
+| **Login** | Email + password authentication form |
+| **Register** | Full name, email, password registration |
+| **Home** | Dashboard: hero card, quick stats, strategy list |
+| **Builder** | Asset picker, amount, frequency, date range, MC months |
+| **Backtest** | ROI metrics + portfolio growth + ROI-over-time charts |
+| **Monte Carlo** | 500-path projection cone + outcome summary |
+| **Portfolio** | Aggregate stats + ROI bar comparison + strategy table |
 
-### Now what?
+---
 
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
+## 🔑 Key Libraries
 
-# Troubleshooting
+| Library | Purpose |
+|---------|---------|
+| `@react-navigation/native` | Screen navigation |
+| `@react-navigation/bottom-tabs` | Tab bar |
+| `@react-navigation/stack` | Stack navigation |
+| `react-native-svg` | Custom SVG charts |
+| `react-native-safe-area-context` | Safe area insets |
+| `react-native-gesture-handler` | Gesture support |
+| `react-native-reanimated` | Smooth animations |
 
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+---
 
-# Learn More
+## 🗺️ Roadmap (Backend Integration)
 
-To learn more about React Native, take a look at the following resources:
+- [ ] Connect Supabase Auth (replace mock login)
+- [ ] Fetch real OHLCV data from Bybit API
+- [ ] Store strategies in PostgreSQL via Supabase
+- [ ] Real DCA backtest engine (Kotlin coroutines or JS)
+- [ ] Real Monte Carlo with proper GBM
+- [ ] PDF/CSV export via Supabase Edge Functions
+- [ ] Push notifications for portfolio alerts
+- [ ] Offline-first sync with Room DB
 
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+---
+
+## ⚠️ Disclaimer
+
+This app is a **simulation tool only**. All data displayed is for educational purposes. This is **not financial advice**. Never invest money you cannot afford to lose.
+
+---
+
+*Presented by: OkSobatSister — Mobile Programming, 28 April 2026*
