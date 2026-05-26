@@ -11,7 +11,9 @@
     "ios": "react-native run-ios",
     "start": "react-native start",
     "start-fresh": "react-native start --reset-cache",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "format-check": "prettier --check \"src/**/*.{ts,tsx}\"",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\""
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^1.23.1",

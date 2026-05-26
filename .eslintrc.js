@@ -5,6 +5,5 @@ module.exports = {
     'react-native/no-inline-styles': 'warn',
     'no-shadow': 'off',
     '@typescript-eslint/no-shadow': 'error',
-    'prettier/prettier': ['warn', { singleQuote: true, trailingComma: 'all' }],
   },
 };
