@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet, Platform } from 'react-native';
+import { View, Text, StyleSheet, Platform, ActivityIndicator } from 'react-native';
 import { NavigationContainer }       from '@react-navigation/native';
 import { createStackNavigator }      from '@react-navigation/stack';
 import { createBottomTabNavigator }  from '@react-navigation/bottom-tabs';
 
 import { Colors } from '../theme';
+import { useAuth } from '../hooks/useAuth';
 
 import { SplashScreen }      from '../screens/Auth/SplashScreen';
 import { LoginScreen }       from '../screens/Auth/LoginScreen';
@@ -76,26 +77,43 @@ const HEADER_OPTS = {
   headerShadowVisible: false,
 };
 
-export const AppNavigator: React.FC = () => (
-  <NavigationContainer
-    theme={{
-      dark: true,
-      colors: {
-        primary:      Colors.purple,
-        background:   Colors.bgPrimary,
-        card:         Colors.bgCard,
-        text:         Colors.textPrimary,
-        border:       Colors.border,
-        notification: Colors.purple,
-      },
-    }}
-  >
-    <RootStack.Navigator screenOptions={{ headerShown: false, cardStyle: { backgroundColor: Colors.bgPrimary } }}>
-      <RootStack.Screen name="Auth" component={AuthNavigator} options={{ animationTypeForReplace: 'pop' }} />
-      <RootStack.Screen name="Main" component={MainTabs}      options={{ animationTypeForReplace: 'push' }} />
-      <RootStack.Screen name="Backtest"   component={BacktestScreen}   options={{ ...HEADER_OPTS, headerTitle: 'Backtest Results' }} />
-      <RootStack.Screen name="MonteCarlo" component={MonteCarloScreen} options={{ ...HEADER_OPTS, headerTitle: 'Monte Carlo Forecast' }} />
-      <RootStack.Screen name="DataLayerTest" component={DataLayerTestScreen} options={{ ...HEADER_OPTS, headerTitle: '🧪 Data Layer Tests' }} />
-    </RootStack.Navigator>
-  </NavigationContainer>
-);
+export const AppNavigator: React.FC = () => {
+  const { session, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, backgroundColor: Colors.bgPrimary, alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator size="large" color={Colors.purple} />
+      </View>
+    );
+  }
+
+  return (
+    <NavigationContainer
+      theme={{
+        dark: true,
+        colors: {
+          primary:      Colors.purple,
+          background:   Colors.bgPrimary,
+          card:         Colors.bgCard,
+          text:         Colors.textPrimary,
+          border:       Colors.border,
+          notification: Colors.purple,
+        },
+      }}
+    >
+      <RootStack.Navigator screenOptions={{ headerShown: false, cardStyle: { backgroundColor: Colors.bgPrimary } }}>
+        {session ? (
+          <>
+            <RootStack.Screen name="Main"  component={MainTabs}  options={{ animationTypeForReplace: 'push' }} />
+            <RootStack.Screen name="Backtest"   component={BacktestScreen}   options={{ ...HEADER_OPTS, headerTitle: 'Backtest Results' }} />
+            <RootStack.Screen name="MonteCarlo" component={MonteCarloScreen} options={{ ...HEADER_OPTS, headerTitle: 'Monte Carlo Forecast' }} />
+            <RootStack.Screen name="DataLayerTest" component={DataLayerTestScreen} options={{ ...HEADER_OPTS, headerTitle: '🧪 Data Layer Tests' }} />
+          </>
+        ) : (
+          <RootStack.Screen name="Auth" component={AuthNavigator} options={{ animationTypeForReplace: 'pop' }} />
+        )}
+      </RootStack.Navigator>
+    </NavigationContainer>
+  );
+};

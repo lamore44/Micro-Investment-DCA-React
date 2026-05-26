@@ -144,14 +144,22 @@ MicroDCA/
 
 ## 🗺️ Roadmap (Backend Integration)
 
-- [ ] Connect Supabase Auth (replace mock login)
-- [ ] Fetch real OHLCV data from Bybit API
-- [ ] Store strategies in PostgreSQL via Supabase
-- [ ] Real DCA backtest engine (Kotlin coroutines or JS)
-- [ ] Real Monte Carlo with proper GBM
-- [ ] PDF/CSV export via Supabase Edge Functions
-- [ ] Push notifications for portfolio alerts
-- [ ] Offline-first sync with Room DB
+### ✅ Done
+- [x] Fetch real OHLCV data from Bybit API (`src/services/api/bybitApi.ts`)
+- [x] Data cache layer with TTL (`src/services/cache/cacheService.ts`)
+- [x] Market repository with offline-stale fallback (`src/services/marketRepository.ts`)
+
+### 🚧 In Progress / Next
+- [ ] Connect Supabase Auth via `@supabase/supabase-js` (replace mock login)
+- [ ] Design PostgreSQL schema: `profiles`, `portfolios`, `strategies`, `backtest_results`
+- [ ] Implement RLS (Row Level Security) on Supabase
+- [ ] Store strategies & results in Supabase PostgreSQL
+- [ ] Implement sync with `react-native-background-fetch` + NetInfo listener (replaces Room DB + WorkManager)
+- [ ] Supabase Edge Function: `fetch-price-cache` (proxy Bybit API)
+- [ ] Supabase Realtime for portfolio/strategy notifications
+- [ ] PDF/CSV export via `react-native-fs` + `react-native-share` (or Edge Function for heavy reports)
+- [ ] Push notifications via Firebase Cloud Messaging (FCM)
+- [ ] Real DCA backtest engine + Monte Carlo GBM (JS/TS — on-device)
 
 ---
 

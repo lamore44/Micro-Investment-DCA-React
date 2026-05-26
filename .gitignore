@@ -52,6 +52,5 @@ vendor/bundle
 Thumbs.db
 *.log
 .env
-.env.*
 test-bybit.js
 coverage/

@@ -4,6 +4,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors, Typography } from '../../theme';
+import { useAuth } from '../../hooks/useAuth';
 
 interface Props { navigation: any; }
 
@@ -11,6 +12,7 @@ export const SplashScreen: React.FC<Props> = ({ navigation }) => {
   const fadeAnim  = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const tagAnim   = useRef(new Animated.Value(0)).current;
+  const { session } = useAuth();
 
   useEffect(() => {
     // Entrance animation
@@ -20,8 +22,11 @@ export const SplashScreen: React.FC<Props> = ({ navigation }) => {
     ]).start(() => {
       // Tagline fade in
       Animated.timing(tagAnim, { toValue: 1, duration: 400, delay: 200, useNativeDriver: true }).start();
-      // Navigate after 2.2s
-      setTimeout(() => navigation.replace('Login'), 2200);
+      // Navigate after 2.2s — session already loaded by AuthProvider
+      setTimeout(() => {
+        // If already logged in, AppNavigator will show Main tabs
+        navigation.replace('Login');
+      }, 2200);
     });
   }, []);
 

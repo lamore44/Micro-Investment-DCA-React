@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { StatusBar, LogBox } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppNavigator } from './src/navigation/AppNavigator';
+import { AuthProvider } from './src/hooks/useAuth';
 import { Colors } from './src/theme';
 
 // Suppress known noisy warnings during development
@@ -20,7 +21,9 @@ const App: React.FC = () => {
           backgroundColor={Colors.bgPrimary}
           translucent={false}
         />
-        <AppNavigator />
+        <AuthProvider>
+          <AppNavigator />
+        </AuthProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

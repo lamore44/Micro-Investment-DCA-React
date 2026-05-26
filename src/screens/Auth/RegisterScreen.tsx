@@ -9,6 +9,7 @@ import { LogoBadge }  from '../../components/common/LogoBadge';
 import { TextInput }  from '../../components/common/TextInput';
 import { Button }     from '../../components/common/Button';
 import { Divider }    from '../../components/common/Divider';
+import { useAuth }    from '../../hooks/useAuth';
 
 interface Props { navigation: any; }
 
@@ -20,7 +21,9 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState('');
 
-  const handleRegister = () => {
+  const { signUp } = useAuth();
+
+  const handleRegister = async () => {
     setError('');
     if (!name || !email || !pw || !pwConf) {
       setError('Please fill in all fields.');
@@ -35,10 +38,13 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
       return;
     }
     setLoading(true);
-    setTimeout(() => {
+    const { error: authError } = await signUp(email, pw, name);
+    if (authError) {
+      setError(authError);
       setLoading(false);
-      navigation.replace('Main');
-    }, 1400);
+      return;
+    }
+    // Supabase signUp auto-creates session → onAuthStateChange routes to Main
   };
 
   return (

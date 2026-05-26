@@ -15,6 +15,7 @@ import { TextInput }  from '../../components/common/TextInput';
 import { Button }     from '../../components/common/Button';
 import { Divider }    from '../../components/common/Divider';
 import { Badge }      from '../../components/common/Badge';
+import { useAuth }    from '../../hooks/useAuth';
 
 interface Props {
   navigation: any;
@@ -26,18 +27,22 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState('');
 
-  const handleLogin = () => {
+  const { signIn } = useAuth();
+
+  const handleLogin = async () => {
     setError('');
     if (!email || !password) {
       setError('Please fill in all fields.');
       return;
     }
     setLoading(true);
-    // Mock auth delay
-    setTimeout(() => {
+    const { error: authError } = await signIn(email, password);
+    if (authError) {
+      setError(authError);
       setLoading(false);
-      navigation.replace('Main');
-    }, 1200);
+      return;
+    }
+    // onAuthStateChange in AppNavigator handles navigation
   };
 
   return (
@@ -73,6 +78,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
               keyboardType="email-address"
               autoCapitalize="none"
               autoComplete="email"
+              textContentType="emailAddress"
             />
             <TextInput
               label="PASSWORD"
@@ -81,6 +87,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
               onChangeText={setPassword}
               isPassword
               autoComplete="password"
+              textContentType="password"
             />
             {error ? <Text style={styles.error}>{error}</Text> : null}
           </View>
