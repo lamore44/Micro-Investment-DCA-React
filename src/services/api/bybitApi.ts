@@ -1,6 +1,7 @@
 //  Bybit API Service
 //  Handles all HTTP calls to Bybit v5 public endpoints.
-//  Includes request throttling to respect rate limits.
+//  Tries Supabase Edge Function (cached proxy) first,
+//  falls back to direct Bybit API if Edge is unreachable.
 
 import {
   BybitKlineResponse,
@@ -9,16 +10,20 @@ import {
   KlineParams,
   BYBIT_MAX_LIMIT,
 } from './types';
+import { SUPABASE_ANON_KEY, EDGE_API_KEY } from '@env';
 
 // Config
 
 const BASE_URL = 'https://api.bybit.com';
 const KLINE_ENDPOINT = '/v5/market/kline';
 
+// Supabase Edge Function (cached proxy)
+const EDGE_FUNCTION_URL =
+  'https://dzqatxbgtjwazewzagvx.supabase.co/functions/v1/fetch-price-cache';
+
 /**
- * Minimum delay between consecutive API requests (ms).
- * Bybit's public rate limit is ~120 req/min for market endpoints,
- * so 500ms (~120 req/min) provides a safe margin.
+ * Minimum delay between consecutive direct Bybit API requests (ms).
+ * Only used as fallback when Edge Function is down.
  */
 const THROTTLE_DELAY_MS = 500;
 
@@ -26,11 +31,6 @@ const THROTTLE_DELAY_MS = 500;
 
 let lastRequestTime = 0;
 
-/**
- * Wait until enough time has passed since the last request.
- * Simple serial throttle — sufficient for a mobile app where
- * requests are user-initiated and sequential.
- */
 async function throttle(): Promise<void> {
   const now = Date.now();
   const elapsed = now - lastRequestTime;
@@ -44,11 +44,6 @@ async function throttle(): Promise<void> {
 
 // Helpers
 
-/**
- * Parse Bybit's raw string-array candle into a typed CandleData object.
- * Raw format: [startTime, open, high, low, close, volume, turnover]
- * All values are strings.
- */
 function parseCandle(raw: string[]): CandleData {
   return {
     startTime: Number(raw[0]),
@@ -61,9 +56,6 @@ function parseCandle(raw: string[]): CandleData {
   };
 }
 
-/**
- * Build a URL with query params, skipping undefined values.
- */
 function buildUrl(
   endpoint: string,
   params: Record<string, string | number | undefined>,
@@ -79,7 +71,53 @@ function buildUrl(
   return query ? `${base}${path}?${query}` : `${base}${path}`;
 }
 
+// ── Edge Function Client ────────────────────────────────
+
+/**
+ * Fetch kline data via Supabase Edge Function (cached proxy).
+ * Returns null if the Edge Function is unreachable.
+ */
+async function fetchFromEdge(params: KlineParams): Promise<CandleData[] | null> {
+  const query = new URLSearchParams({
+    symbol: params.symbol,
+    interval: params.interval,
+    start: String(params.start ?? ''),
+    end: String(params.end ?? ''),
+    limit: String(params.limit ?? BYBIT_MAX_LIMIT),
+    category: params.category ?? 'spot',
+  });
+
+  const response = await fetch(`${EDGE_FUNCTION_URL}?${query}`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${EDGE_API_KEY}`,
+    },
+  });
+
+  if (!response.ok) return null;
+
+  const json = await response.json();
+  const rawCandles = json?.data;
+
+  if (!Array.isArray(rawCandles) || rawCandles.length === 0) return null;
+
+  return rawCandles.map(parseCandle);
+}
+
+// ── Public API ──────────────────────────────────────────
+
 export async function getKline(params: KlineParams): Promise<CandleData[]> {
+  // ── Try Edge Function first (cached proxy) ────────
+  try {
+    const edgeResult = await fetchFromEdge(params);
+    if (edgeResult && edgeResult.length > 0) {
+      return edgeResult;
+    }
+  } catch {
+    console.warn('[BybitApi] Edge Function failed, falling back to direct Bybit');
+  }
+
+  // ── Fallback: direct Bybit API ───────────────────
   await throttle();
 
   const url = buildUrl(KLINE_ENDPOINT, {
@@ -109,18 +147,13 @@ export async function getKline(params: KlineParams): Promise<CandleData[]> {
   }
 
   const candles = (json.result.list ?? []).map(parseCandle);
-
-  // Bybit returns newest-first; reverse to get chronological order
-  candles.reverse();
+  candles.reverse(); // Bybit returns newest-first
 
   return candles;
 }
 
 /**
  * Fetch the latest ticker price for a symbol.
- *
- * Uses kline endpoint with interval='1' (1 min) and limit=1,
- * then returns the close price of the most recent candle.
  */
 export async function getLatestPrice(
   symbol: string,
@@ -141,7 +174,6 @@ export async function getLatestPrice(
 
 /**
  * Quick health-check: can we reach Bybit?
- * Useful for showing online/offline status in the UI.
  */
 export async function pingBybit(): Promise<boolean> {
   try {

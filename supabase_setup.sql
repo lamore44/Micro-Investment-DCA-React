@@ -244,3 +244,13 @@ CREATE INDEX idx_strategies_active ON public.strategies(is_active) WHERE is_acti
 -- Next: jalankan ini → ambil SUPABASE_URL + SUPABASE_ANON_KEY
 -- → masukkan ke .env → install @supabase/supabase-js
 -- ============================================================
+   CREATE TABLE public.price_cache (
+     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+     cache_key TEXT NOT NULL UNIQUE,
+     data JSONB NOT NULL,
+     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+     ttl_seconds INT NOT NULL DEFAULT 86400
+   );
+
+   CREATE INDEX idx_price_cache_key ON public.price_cache(cache_key);
+   CREATE INDEX idx_price_cache_expiry ON public.price_cache(created_at);
