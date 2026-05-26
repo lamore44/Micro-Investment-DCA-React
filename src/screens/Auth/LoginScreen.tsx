@@ -27,7 +27,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState('');
 
-  const { signIn } = useAuth();
+  const { signIn, signInWithGoogle } = useAuth();
 
   const handleLogin = async () => {
     setError('');
@@ -100,6 +100,28 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
           />
 
           <Divider style={styles.divider} />
+
+          {/* Google Sign-In */}
+          <TouchableOpacity
+            style={styles.googleBtn}
+            onPress={() => {
+              setLoading(true);
+              setError('');
+              signInWithGoogle()
+                .then(({ error: gError }) => {
+                  setLoading(false);
+                  if (gError) setError(gError);
+                })
+                .catch((e: any) => {
+                  setLoading(false);
+                  setError(e?.message ?? 'Google sign-in failed');
+                });
+            }}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.googleIcon}>G</Text>
+            <Text style={styles.googleLabel}>Continue with Google</Text>
+          </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.switchRow}
@@ -195,5 +217,26 @@ const styles = StyleSheet.create({
 
   badge: {
     alignSelf: 'center',
+  },
+
+  googleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+    borderRadius: Radius.md,
+    paddingVertical: 14,
+    gap: 10,
+    marginBottom: Spacing.xxl,
+  },
+  googleIcon: {
+    fontSize: 20,
+    fontWeight: '700' as const,
+    color: '#4285F4',
+  },
+  googleLabel: {
+    ...Typography.bodyS,
+    color: '#333',
+    fontWeight: '600' as const,
   },
 });

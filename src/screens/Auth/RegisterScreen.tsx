@@ -21,7 +21,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState('');
 
-  const { signUp } = useAuth();
+  const { signUp, signInWithGoogle } = useAuth();
 
   const handleRegister = async () => {
     setError('');
@@ -112,6 +112,21 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
 
           <Divider style={styles.divider} />
 
+          {/* Google Sign-Up */}
+          <TouchableOpacity
+            style={styles.googleBtn}
+            onPress={async () => {
+              setLoading(true);
+              const { error: gError } = await signInWithGoogle();
+              setLoading(false);
+              if (gError) setError(gError);
+            }}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.googleIcon}>G</Text>
+            <Text style={styles.googleLabel}>Continue with Google</Text>
+          </TouchableOpacity>
+
           <TouchableOpacity
             style={styles.switchRow}
             onPress={() => navigation.goBack()}
@@ -141,4 +156,25 @@ const styles = StyleSheet.create({
   switchRow: { alignItems: 'center' },
   switchText:{ ...Typography.bodyS, color: Colors.muted },
   switchLink:{ color: Colors.purple, fontWeight: '700' },
+
+  googleBtn: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    paddingVertical: 14,
+    gap: 10,
+    marginBottom: Spacing.xxl,
+  },
+  googleIcon: {
+    fontSize: 20,
+    fontWeight: '700' as const,
+    color: '#4285F4',
+  },
+  googleLabel: {
+    ...Typography.bodyS,
+    color: '#333',
+    fontWeight: '600' as const,
+  },
 });

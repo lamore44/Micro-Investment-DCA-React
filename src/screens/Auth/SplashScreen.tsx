@@ -4,7 +4,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors, Typography } from '../../theme';
-import { useAuth } from '../../hooks/useAuth';
 
 interface Props { navigation: any; }
 
@@ -12,7 +11,6 @@ export const SplashScreen: React.FC<Props> = ({ navigation }) => {
   const fadeAnim  = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const tagAnim   = useRef(new Animated.Value(0)).current;
-  const { session } = useAuth();
 
   useEffect(() => {
     // Entrance animation

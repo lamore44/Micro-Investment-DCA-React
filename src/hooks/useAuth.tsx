@@ -11,6 +11,7 @@ import React, {
   useRef,
 } from 'react';
 import type { ReactNode } from 'react';
+import { Linking } from 'react-native';
 import { supabase } from '../services/api/supabase';
 import type { Session, User } from '@supabase/supabase-js';
 
@@ -25,6 +26,7 @@ interface AuthContextValue {
     fullName: string,
   ) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
+  signInWithGoogle: () => Promise<{ error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -57,9 +59,37 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (mounted.current) setSession(s);
     });
 
+    // Handle deep link on app resume (OAuth callback)
+    const handleDeepLink = async (event: { url: string }) => {
+      const url = event.url;
+      if (url && url.includes('#')) {
+        // Extract access_token and refresh_token from the fragment
+        const params = url.split('#')[1];
+        const hashParams = new URLSearchParams(params);
+        const access_token = hashParams.get('access_token');
+        const refresh_token = hashParams.get('refresh_token');
+        if (access_token && refresh_token) {
+          try {
+            await supabase.auth.setSession({ access_token, refresh_token });
+          } catch {
+            // Session already set via onAuthStateChange — ignore
+          }
+        }
+      }
+    };
+
+    // Listen for deep link while app is already running
+    const linkingListener = Linking.addEventListener('url', handleDeepLink);
+
+    // Handle deep link that launched the app while it was closed
+    Linking.getInitialURL().then((url) => {
+      if (url) handleDeepLink({ url });
+    });
+
     return () => {
       mounted.current = false;
       subscription.unsubscribe();
+      linkingListener.remove();
     };
   }, []);
 
@@ -89,6 +119,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     await supabase.auth.signOut();
   }, []);
 
+  const signInWithGoogle = useCallback(async () => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: 'com.oksobatsister.microdca://auth/callback',
+        skipBrowserRedirect: true,
+      },
+    });
+    if (error) return { error: error.message };
+    if (data?.url) {
+      await Linking.openURL(data.url);
+    }
+    return {};
+  }, []);
+
   return (
     <AuthContext.Provider
       value={{
@@ -98,6 +143,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         signIn,
         signUp,
         signOut,
+        signInWithGoogle,
       }}
     >
       {children}
