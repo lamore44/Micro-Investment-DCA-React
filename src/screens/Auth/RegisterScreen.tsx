@@ -39,12 +39,13 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
     }
     setLoading(true);
     const { error: authError } = await signUp(email, pw, name);
+    setLoading(false);
     if (authError) {
       setError(authError);
-      setLoading(false);
       return;
     }
-    // Supabase signUp auto-creates session → onAuthStateChange routes to Main
+    // SignUp success — auto-navigate if session created, else show confirmation message
+    navigation.replace('Login');
   };
 
   return (

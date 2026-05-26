@@ -9,8 +9,8 @@ import React, {
   useEffect,
   useCallback,
   useRef,
-  type ReactNode,
 } from 'react';
+import type { ReactNode } from 'react';
 import { supabase } from '../services/api/supabase';
 import type { Session, User } from '@supabase/supabase-js';
 

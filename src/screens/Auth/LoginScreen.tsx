@@ -37,9 +37,9 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
     }
     setLoading(true);
     const { error: authError } = await signIn(email, password);
+    setLoading(false);
     if (authError) {
       setError(authError);
-      setLoading(false);
       return;
     }
     // onAuthStateChange in AppNavigator handles navigation
