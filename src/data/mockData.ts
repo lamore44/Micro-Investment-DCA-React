@@ -142,6 +142,19 @@ export function generateMonteCarlo(startValue: number, months: number): MCResult
 export const ASSETS = ['BTC', 'ETH', 'SOL', 'BNB', 'ADA', 'DOGE'] as const;
 export type Asset = typeof ASSETS[number];
 
+/**
+ * Mapping from user-facing asset ticker → Bybit trading pair symbol.
+ * Used by the data layer to call the correct API endpoint.
+ */
+export const SYMBOL_MAP: Record<Asset, string> = {
+  BTC:  'BTCUSDT',
+  ETH:  'ETHUSDT',
+  SOL:  'SOLUSDT',
+  BNB:  'BNBUSDT',
+  ADA:  'ADAUSDT',
+  DOGE: 'DOGEUSDT',
+};
+
 export const ASSET_PRICES: Record<Asset, number> = {
   BTC:  62_400,
   ETH:   3_080,

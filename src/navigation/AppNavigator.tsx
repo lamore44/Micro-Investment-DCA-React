@@ -14,6 +14,7 @@ import { BuilderScreen }     from '../screens/Builder/BuilderScreen';
 import { BacktestScreen }    from '../screens/Backtest/BacktestScreen';
 import { MonteCarloScreen }  from '../screens/MonteCarlo/MonteCarloScreen';
 import { PortfolioScreen }   from '../screens/Portfolio/PortfolioScreen';
+import { DataLayerTestScreen } from '../screens/Debug/DataLayerTestScreen';
 
 const AuthStack = createStackNavigator();
 const Tab       = createBottomTabNavigator();
@@ -94,6 +95,7 @@ export const AppNavigator: React.FC = () => (
       <RootStack.Screen name="Main" component={MainTabs}      options={{ animationTypeForReplace: 'push' }} />
       <RootStack.Screen name="Backtest"   component={BacktestScreen}   options={{ ...HEADER_OPTS, headerTitle: 'Backtest Results' }} />
       <RootStack.Screen name="MonteCarlo" component={MonteCarloScreen} options={{ ...HEADER_OPTS, headerTitle: 'Monte Carlo Forecast' }} />
+      <RootStack.Screen name="DataLayerTest" component={DataLayerTestScreen} options={{ ...HEADER_OPTS, headerTitle: '🧪 Data Layer Tests' }} />
     </RootStack.Navigator>
   </NavigationContainer>
 );

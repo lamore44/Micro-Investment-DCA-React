@@ -131,6 +131,15 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
           </TouchableOpacity>
         </Card>
 
+        {/* ── Dev: Data Layer Test ── */}
+        <TouchableOpacity
+          style={S.devTestBtn}
+          onPress={() => navigation.navigate('DataLayerTest')}
+          activeOpacity={0.7}
+        >
+          <Text style={S.devTestText}>🧪 Test Data Layer</Text>
+        </TouchableOpacity>
+
       </ScrollView>
     </SafeAreaView>
   );
@@ -181,4 +190,8 @@ const S = StyleSheet.create({
   ctaQuote:   { ...Typography.bodyL, fontWeight: '700', textAlign: 'center', lineHeight: 26, marginBottom: Spacing.xl },
   ctaBtn:     { backgroundColor: Colors.purple, paddingHorizontal: 28, paddingVertical: 13, borderRadius: Radius.md },
   ctaBtnText: { color: Colors.white, fontWeight: '800', fontSize: 15, letterSpacing: -0.3 },
+
+  /* Dev test button */
+  devTestBtn:  { marginTop: Spacing.xl, marginBottom: 20, paddingVertical: 14, borderRadius: Radius.md, borderWidth: 1, borderColor: '#374151', borderStyle: 'dashed', alignItems: 'center', backgroundColor: 'rgba(108, 92, 231, 0.08)' },
+  devTestText: { color: '#8B949E', fontSize: 14, fontWeight: '600' },
 });
