@@ -254,3 +254,5 @@ CREATE INDEX idx_strategies_active ON public.strategies(is_active) WHERE is_acti
 
    CREATE INDEX idx_price_cache_key ON public.price_cache(cache_key);
    CREATE INDEX idx_price_cache_expiry ON public.price_cache(created_at);
+   
+   ALTER PUBLICATION supabase_realtime ADD TABLE public.strategies, public.backtest_results;

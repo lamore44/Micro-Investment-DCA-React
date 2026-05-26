@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
 } from 'react-native';
@@ -7,6 +7,7 @@ import { Colors, Typography, Spacing, Radius } from '../../theme';
 import { Card }          from '../../components/common/Card';
 import { SectionHeader } from '../../components/common/SectionHeader';
 import { useStrategies } from '../../hooks/useStrategies';
+import { useRealtime, type RealtimePayload } from '../../hooks/useRealtime';
 import { Strategy, fmtUSD, fmtPct } from '../../data/mockData';
 
 interface Props { navigation: any; }
@@ -37,18 +38,46 @@ const StrategyRow: React.FC<{ item: Strategy; onPress: () => void }> = ({ item, 
 
 export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const { strategies, totalValue, totalInvested, avgRoi, bestRoi } = useStrategies();
+  const [notification, setNotification] = useState<string | null>(null);
+
+  const handleRealtimeEvent = useCallback((payload: RealtimePayload) => {
+    const asset = (payload.data as any)?.asset || 'Unknown';
+    if (payload.event === 'INSERT') {
+      setNotification(`📊 New ${payload.table === 'strategies' ? 'strategy' : 'backtest'}: ${asset}`);
+    } else if (payload.event === 'UPDATE') {
+      setNotification(`🔄 ${asset} strategy updated`);
+    }
+    setTimeout(() => setNotification(null), 5000);
+  }, []);
+
+  const { isConnected } = useRealtime({
+    onStrategyChange: handleRealtimeEvent,
+    onBacktestComplete: handleRealtimeEvent,
+  });
+
   const overallRoi = totalInvested > 0
     ? ((totalValue - totalInvested) / totalInvested) * 100
     : 37.5;
 
   return (
     <SafeAreaView style={S.safe}>
+
+      {/* ── Realtime notification banner ── */}
+      {notification && (
+        <View style={S.notifBanner}>
+          <Text style={S.notifText}>{notification}</Text>
+        </View>
+      )}
+
       <ScrollView contentContainerStyle={S.content} showsVerticalScrollIndicator={false}>
 
         {/* ── Header ── */}
         <View style={S.header}>
           <View>
-            <Text style={S.greeting}>Hello, User 👋</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <View style={[S.dot, { backgroundColor: isConnected ? Colors.green : Colors.red }]} />
+              <Text style={S.greeting}>Hello, User 👋</Text>
+            </View>
             <Text style={S.greetSub}>Your DCA simulation hub</Text>
           </View>
           <TouchableOpacity style={S.avatar}>
@@ -149,8 +178,21 @@ const S = StyleSheet.create({
   safe:    { flex: 1, backgroundColor: Colors.bgPrimary },
   content: { paddingHorizontal: Spacing.xl, paddingBottom: 40 },
 
+  /* Notification */
+  notifBanner: {
+    backgroundColor: Colors.purple,
+    paddingVertical: 10,
+    paddingHorizontal: Spacing.xl,
+  },
+  notifText: {
+    ...Typography.bodyS,
+    color: Colors.white,
+    textAlign: 'center',
+  },
+
   /* Header */
   header:    { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: Spacing.xl, marginBottom: Spacing.lg },
+  dot:       { width: 8, height: 8, borderRadius: 4 },
   greeting:  { ...Typography.h1, fontSize: 22 },
   greetSub:  { ...Typography.caption, textTransform: 'none', letterSpacing: 0, color: Colors.muted, fontSize: 12, marginTop: 2 },
   avatar:    { width: 40, height: 40, borderRadius: 20, backgroundColor: Colors.bgCard, borderWidth: 1, borderColor: Colors.border, alignItems: 'center', justifyContent: 'center' },
