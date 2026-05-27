@@ -210,19 +210,19 @@ MicroDCA/
 - [x] Fetch real OHLCV data from Bybit API (`src/services/api/bybitApi.ts`)
 - [x] Data cache layer with TTL (`src/services/cache/cacheService.ts`)
 - [x] Market repository with offline-stale fallback (`src/services/marketRepository.ts`)
-- [x] Supabase project setup + `supabase_setup.sql` (profiles, portfolios, strategies, backtest_results, mc_projections)
-- [x] RLS enabled on all tables
-- [x] Supabase Auth client integrated (`src/services/api/supabase.ts`)
-- [x] AuthContext with `signIn` / `signUp` / `signOut` + session persistence (`src/hooks/useAuth.tsx`)
+- [x] Supabase project setup + `supabase_setup.sql`
+- [x] RLS on all tables + triggers (`handle_new_user`, `update_updated_at`)
+- [x] Supabase Auth: Email + Google OAuth + deep link callback
 - [x] Auth-aware navigation (unauthenticated → AuthStack, authenticated → MainTabs)
+- [x] Supabase Edge Function `fetch-price-cache` (Bybit proxy with cache + API key auth)
+- [x] Supabase Realtime on `strategies` + `backtest_results` with in-app notification banner
+- [x] PDF export (PDFBolt API) + CSV export with native share sheet
+- [x] CI/CD pipeline (lint + bundle check + APK build)
 
 ### 🚧 In Progress / Next
 - [ ] Real DCA backtest engine + Monte Carlo GBM (JS/TS — on-device)
 - [ ] Store strategies & backtest results in Supabase PostgreSQL
 - [ ] Implement sync with `react-native-background-fetch` + NetInfo listener
-- [ ] Supabase Edge Function: `fetch-price-cache` (proxy Bybit API)
-- [ ] Supabase Realtime for portfolio/strategy notifications
-- [ ] PDF/CSV export via `react-native-fs` + `react-native-share`
 - [ ] Push notifications via Firebase Cloud Messaging (FCM)
 
 ---
