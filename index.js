@@ -1,5 +1,6 @@
-// URL polyfill — required by @supabase/supabase-js on Hermes
-import 'react-native-url-polyfill/auto';
+// Polyfills — required by Hermes engine
+import 'react-native-url-polyfill/auto';  // URL (Supabase)
+import 'text-encoding';                   // TextEncoder (pdfmake)
 
 import { AppRegistry } from 'react-native';
 import App from './App';

@@ -1,8 +1,3 @@
-// ─────────────────────────────────────────────────────────
-// useRealtime — listen for Supabase Realtime changes
-// Tracks: strategy updates, new backtest results, MC projections
-// ─────────────────────────────────────────────────────────
-
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { supabase } from '../services/api/supabase';
 import type { RealtimeChannel } from '@supabase/supabase-js';

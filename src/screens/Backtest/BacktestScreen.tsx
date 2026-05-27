@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView,
-  TouchableOpacity, Alert,
+  TouchableOpacity, Alert, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors, Typography, Spacing, Radius } from '../../theme';
@@ -13,6 +13,7 @@ import {
   MOCK_STRATEGIES, Strategy, generatePortfolioChart,
   fmtUSD, fmtPct, fmtCoins,
 } from '../../data/mockData';
+import { exportToPdf, exportToCsv } from '../../services/exportService';
 
 interface Props { navigation: any; route: any; }
 
@@ -120,10 +121,29 @@ export const BacktestScreen: React.FC<Props> = ({ navigation, route }) => {
           </TouchableOpacity>
           <TouchableOpacity
             style={[S.actionBtn, S.actionBtnGhost]}
-            onPress={() => Alert.alert('Export', 'CSV export coming soon!')}
+            onPress={async () => {
+              try {
+                await exportReport([strategy], `${strategy.asset} Backtest Report`);
+              } catch (e: any) {
+                Alert.alert('Export Failed', e.message);
+              }
+            }}
             activeOpacity={0.8}
           >
-            <Text style={[S.actionBtnText, S.actionBtnTextGhost]}>📤  Export CSV</Text>
+            <Text style={[S.actionBtnText, S.actionBtnTextGhost]}>📄  Report</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[S.actionBtn, S.actionBtnGhost]}
+            onPress={async () => {
+              try {
+                await exportToCsv([strategy]);
+              } catch (e: any) {
+                Alert.alert('Export Failed', e.message);
+              }
+            }}
+            activeOpacity={0.8}
+          >
+            <Text style={[S.actionBtnText, S.actionBtnTextGhost]}>📊  CSV</Text>
           </TouchableOpacity>
         </View>
 

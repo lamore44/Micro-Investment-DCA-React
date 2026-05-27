@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView,
-  TouchableOpacity, Alert,
+  TouchableOpacity, Alert, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors, Typography, Spacing, Radius } from '../../theme';
@@ -10,11 +10,13 @@ import { MetricCard }    from '../../components/common/MetricCard';
 import { SectionHeader } from '../../components/common/SectionHeader';
 import { Divider }       from '../../components/common/Divider';
 import { MOCK_STRATEGIES, Strategy, fmtUSD, fmtPct } from '../../data/mockData';
+import { exportReport, exportToCsv } from '../../services/exportService';
 
 interface Props { navigation: any; }
 
 export const PortfolioScreen: React.FC<Props> = ({ navigation }) => {
   const [strategies, setStrategies] = useState<Strategy[]>(MOCK_STRATEGIES);
+  const [exporting, setExporting] = useState(false);
 
   const totalValue    = strategies.reduce((s, x) => s + x.finalValue,    0);
   const totalInvested = strategies.reduce((s, x) => s + x.totalInvested, 0);
@@ -191,6 +193,46 @@ export const PortfolioScreen: React.FC<Props> = ({ navigation }) => {
           </Card>
         )}
 
+        {/* ── Export Buttons ── */}
+        <SectionHeader title="📤 Export" style={{ marginTop: Spacing.xl }} />
+        <View style={styles.exportRow}>
+          <TouchableOpacity
+            style={styles.exportBtn}
+            onPress={async () => {
+              setExporting(true);
+              try { await exportReport(strategies); }
+              catch (e: any) { Alert.alert('Export Failed', e.message); }
+              finally { setExporting(false); }
+            }}
+            disabled={exporting}
+            activeOpacity={0.7}
+          >
+            {exporting ? (
+              <ActivityIndicator size="small" color={Colors.purple} />
+            ) : (
+              <>
+                <Text style={styles.exportIcon}>📄</Text>
+                <Text style={styles.exportLabel}>Report</Text>
+              </>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.exportBtn}
+            onPress={async () => {
+              setExporting(true);
+              try { await exportToCsv(strategies); }
+              catch (e: any) { Alert.alert('Export Failed', e.message); }
+              finally { setExporting(false); }
+            }}
+            disabled={exporting}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.exportIcon}>📊</Text>
+            <Text style={styles.exportLabel}>CSV Data</Text>
+          </TouchableOpacity>
+        </View>
+
       </ScrollView>
     </SafeAreaView>
   );
@@ -275,4 +317,25 @@ const styles = StyleSheet.create({
   /* Empty */
   empty: { alignItems: 'center', paddingVertical: Spacing.xxxl },
   emptyText: { ...Typography.bodyS, color: Colors.muted, textAlign: 'center' },
+
+  /* Export */
+  exportRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: Spacing.sm,
+  },
+  exportBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.bgCard,
+    borderRadius: Radius.md,
+    paddingVertical: 16,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  exportIcon: { fontSize: 18 },
+  exportLabel: { ...Typography.bodyS, color: Colors.textPrimary },
 });

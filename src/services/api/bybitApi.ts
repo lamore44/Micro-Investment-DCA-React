@@ -1,8 +1,3 @@
-//  Bybit API Service
-//  Handles all HTTP calls to Bybit v5 public endpoints.
-//  Tries Supabase Edge Function (cached proxy) first,
-//  falls back to direct Bybit API if Edge is unreachable.
-
 import {
   BybitKlineResponse,
   CandleData,
@@ -12,14 +7,9 @@ import {
 } from './types';
 import { SUPABASE_ANON_KEY, EDGE_API_KEY } from '@env';
 
-// Config
-
 const BASE_URL = 'https://api.bybit.com';
 const KLINE_ENDPOINT = '/v5/market/kline';
-
-// Supabase Edge Function (cached proxy)
-const EDGE_FUNCTION_URL =
-  'https://dzqatxbgtjwazewzagvx.supabase.co/functions/v1/fetch-price-cache';
+const EDGE_FUNCTION_URL = 'https://dzqatxbgtjwazewzagvx.supabase.co/functions/v1/fetch-price-cache';
 
 /**
  * Minimum delay between consecutive direct Bybit API requests (ms).
