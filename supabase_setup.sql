@@ -240,19 +240,29 @@ CREATE INDEX idx_strategies_portfolio ON public.strategies(portfolio_id);
 CREATE INDEX idx_strategies_active ON public.strategies(is_active) WHERE is_active = true;
 
 -- ============================================================
--- SELESAI — Semua tabel, trigger, RLS, index siap.
--- Next: jalankan ini → ambil SUPABASE_URL + SUPABASE_ANON_KEY
--- → masukkan ke .env → install @supabase/supabase-js
+-- BAGIAN 7: PRICE CACHE (Week 6)
+-- Cache data kline dari Bybit untuk Edge Function
 -- ============================================================
-   CREATE TABLE public.price_cache (
-     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-     cache_key TEXT NOT NULL UNIQUE,
-     data JSONB NOT NULL,
-     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-     ttl_seconds INT NOT NULL DEFAULT 86400
-   );
 
-   CREATE INDEX idx_price_cache_key ON public.price_cache(cache_key);
-   CREATE INDEX idx_price_cache_expiry ON public.price_cache(created_at);
-   
-   ALTER PUBLICATION supabase_realtime ADD TABLE public.strategies, public.backtest_results;
+CREATE TABLE IF NOT EXISTS public.price_cache (
+  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  cache_key TEXT NOT NULL UNIQUE,
+  data JSONB NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  ttl_seconds INT NOT NULL DEFAULT 86400
+);
+
+CREATE INDEX IF NOT EXISTS idx_price_cache_key ON public.price_cache(cache_key);
+CREATE INDEX IF NOT EXISTS idx_price_cache_expiry ON public.price_cache(created_at);
+
+-- ============================================================
+-- BAGIAN 8: REALTIME (Week 8)
+-- Enable Realtime on strategies & backtest_results
+-- ============================================================
+
+ALTER PUBLICATION supabase_realtime ADD TABLE public.strategies;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.backtest_results;
+
+-- ============================================================
+-- SELESAI — Semua tabel, trigger, RLS, index, cache, realtime siap.
+-- ============================================================

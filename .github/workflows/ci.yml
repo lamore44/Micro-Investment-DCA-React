@@ -90,6 +90,7 @@ jobs:
 
       - name: Create debug keystore
         run: |
+          mkdir -p ~/.android
           keytool -genkey -v \
             -keystore ~/.android/debug.keystore \
             -storepass android \

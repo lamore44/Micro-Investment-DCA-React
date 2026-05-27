@@ -88,6 +88,13 @@ MicroDCA/
 ├── .env                                 # Supabase keys (gitignored)
 ├── .env.example                         # Template for .env
 ├── supabase_setup.sql                   # Full DB schema + RLS + triggers
+├── supabase/
+│   └── functions/
+│       └── fetch-price-cache/           # Edge Function (Bybit proxy cache)
+├── coverage/
+│   ├── progress.md                      # Aril task tracker
+│   └── material/                        # Sprint planning
+├── .github/workflows/ci.yml             # CI/CD pipeline
 ├── babel.config.js                      # Babel + module-resolver + dotenv
 ├── android/                             # Native Android project
 │   ├── local.properties                 # sdk.dir (gitignored)
