@@ -171,16 +171,108 @@ export const useStrategies = () => {
     loadStrategies();
   }, [loadStrategies]);
 
-  const addStrategy = useCallback((s: Strategy) => {
-    setStrategies(prev => {
-      const exists = prev.find(x => x.id === s.id);
-      return exists ? prev : [s, ...prev];
-    });
-  }, []);
+  const saveStrategy = useCallback(async (s: Strategy) => {
+    if (!user?.id) {
+      throw new Error('User not authenticated');
+    }
 
-  const removeStrategy = useCallback((id: string) => {
-    setStrategies(prev => prev.filter(s => s.id !== id));
-  }, []);
+    setError(null);
+
+    // 1. Get or create portfolio
+    let portfolioId: string;
+    const { data: portData, error: portError } = await supabase
+      .from('portfolios')
+      .select('id')
+      .eq('user_id', user.id)
+      .limit(1);
+
+    if (portError) {
+      throw new Error(portError.message);
+    }
+
+    if (portData && portData.length > 0) {
+      portfolioId = portData[0].id;
+    } else {
+      const { data: newPort, error: newPortError } = await supabase
+        .from('portfolios')
+        .insert({ user_id: user.id, name: 'My Portfolio' })
+        .select('id')
+        .single();
+
+      if (newPortError) {
+        throw new Error(newPortError.message);
+      }
+      portfolioId = newPort.id;
+    }
+
+    // 2. Insert strategy
+    const { data: stratData, error: stratError } = await supabase
+      .from('strategies')
+      .insert({
+        user_id: user.id,
+        portfolio_id: portfolioId,
+        asset: s.asset,
+        amount_usd: s.amount,
+        frequency: s.frequency,
+        start_date: s.startDate,
+        end_date: s.endDate || null,
+        mc_months: 12,
+        is_active: true,
+      })
+      .select('id')
+      .single();
+
+    if (stratError) {
+      throw new Error(stratError.message);
+    }
+
+    const newStrategyId = stratData.id;
+
+    // 3. Insert backtest result
+    const { error: btError } = await supabase
+      .from('backtest_results')
+      .insert({
+        strategy_id: newStrategyId,
+        total_invested: s.totalInvested,
+        final_value: s.finalValue,
+        roi_pct: s.roi,
+        cagr_pct: s.cagr,
+        max_drawdown_pct: s.maxDrawdown,
+        sharpe_ratio: s.sharpeRatio,
+        asset_acquired: s.totalCoins,
+      });
+
+    if (btError) {
+      // Clean up strategy if backtest insertion fails
+      await supabase.from('strategies').delete().eq('id', newStrategyId);
+      throw new Error(btError.message);
+    }
+
+    // Refresh strategies list to update local state
+    await loadStrategies();
+  }, [user?.id, loadStrategies]);
+
+  const removeStrategy = useCallback(async (id: string) => {
+    if (!user?.id) {
+      // Offline / local fallback
+      setStrategies(prev => prev.filter(s => s.id !== id));
+      return;
+    }
+
+    setError(null);
+    try {
+      const { error: dbError } = await supabase
+        .from('strategies')
+        .delete()
+        .eq('id', id);
+
+      if (dbError) throw dbError;
+
+      setStrategies(prev => prev.filter(s => s.id !== id));
+    } catch (e: any) {
+      setError(e.message || 'Failed to delete strategy');
+    }
+  }, [user?.id]);
 
   const totalValue = strategies.reduce((sum, s) => sum + s.finalValue, 0);
   const totalInvested = strategies.reduce((sum, s) => sum + s.totalInvested, 0);
@@ -194,7 +286,7 @@ export const useStrategies = () => {
 
   return {
     strategies,
-    addStrategy,
+    saveStrategy,
     removeStrategy,
     totalValue,
     totalInvested,

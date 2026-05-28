@@ -4,7 +4,7 @@
  * without needing a heavy external charting library.
  */
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, useWindowDimensions } from 'react-native';
 import Svg, {
   Path,
   Defs,
@@ -32,43 +32,49 @@ interface AreaChartViewProps {
   title?: string;
 }
 
-const W = Dimensions.get('window').width - 40;
+const CARD_GUTTER = 80;
 
 export const AreaChartView: React.FC<AreaChartViewProps> = ({
   data,
-  color  = Colors.purple,
+  color = Colors.purple,
   color2 = Colors.violet,
   height = 200,
   showGrid = true,
-  formatY = (v) => `$${(v / 1000).toFixed(0)}K`,
+  formatY = v => `$${(v / 1000).toFixed(0)}K`,
   title,
 }) => {
+  const { width: windowWidth } = useWindowDimensions();
+  const chartWidth = Math.max(0, windowWidth - CARD_GUTTER);
   const PAD = { top: 16, bottom: 28, left: 48, right: 12 };
-  const W_inner = W - PAD.left - PAD.right;
+  const W_inner = chartWidth - PAD.left - PAD.right;
   const H_inner = height - PAD.top - PAD.bottom;
 
   const { minV, maxV, pts1, pts2 } = useMemo(() => {
-    const vals  = data.map(d => d.value);
+    const vals = data.map(d => d.value);
     const vals2 = data.map(d => d.value2 ?? 0);
-    const allV  = [...vals, ...vals2.filter(v => v > 0)];
-    const minV  = Math.min(...allV) * 0.9;
-    const maxV  = Math.max(...allV) * 1.05;
+    const allV = [...vals, ...vals2.filter(v => v > 0)];
+    const minV = Math.min(...allV) * 0.9;
+    const maxV = Math.max(...allV) * 1.05;
     const range = maxV - minV || 1;
 
     const toXY = (i: number, v: number) => ({
       x: PAD.left + (i / (data.length - 1)) * W_inner,
-      y: PAD.top  + (1 - (v - minV) / range) * H_inner,
+      y: PAD.top + (1 - (v - minV) / range) * H_inner,
     });
 
     const pts1 = data.map((d, i) => toXY(i, d.value));
-    const pts2 = data[0]?.value2 !== undefined
-      ? data.map((d, i) => toXY(i, d.value2!))
-      : [];
+    const pts2 =
+      data[0]?.value2 !== undefined
+        ? data.map((d, i) => toXY(i, d.value2!))
+        : [];
 
     return { minV, maxV, pts1, pts2 };
   }, [data]);
 
-  const buildPath = (pts: { x: number; y: number }[], fill?: boolean): string => {
+  const buildPath = (
+    pts: { x: number; y: number }[],
+    fill?: boolean,
+  ): string => {
     if (pts.length < 2) return '';
     let d = `M${pts[0].x},${pts[0].y}`;
     for (let i = 1; i < pts.length; i++) {
@@ -83,13 +89,16 @@ export const AreaChartView: React.FC<AreaChartViewProps> = ({
   };
 
   const gridLines = 4;
-  const yLabels: { v: number; y: number }[] = Array.from({ length: gridLines + 1 }, (_, i) => {
-    const frac = i / gridLines;
-    return {
-      v: minV + frac * (maxV - minV),
-      y: PAD.top + (1 - frac) * H_inner,
-    };
-  });
+  const yLabels: { v: number; y: number }[] = Array.from(
+    { length: gridLines + 1 },
+    (_, i) => {
+      const frac = i / gridLines;
+      return {
+        v: minV + frac * (maxV - minV),
+        y: PAD.top + (1 - frac) * H_inner,
+      };
+    },
+  );
 
   const xStep = Math.max(1, Math.floor(data.length / 5));
   const xLabels = data
@@ -105,43 +114,53 @@ export const AreaChartView: React.FC<AreaChartViewProps> = ({
   return (
     <View>
       {title ? <Text style={styles.title}>{title}</Text> : null}
-      <Svg width={W} height={height}>
+      <Svg width={chartWidth} height={height}>
         <Defs>
           <SvgLinearGradient id="grad1" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0%"   stopColor={color}  stopOpacity={0.35} />
-            <Stop offset="100%" stopColor={color}  stopOpacity={0.0}  />
+            <Stop offset="0%" stopColor={color} stopOpacity={0.35} />
+            <Stop offset="100%" stopColor={color} stopOpacity={0.0} />
           </SvgLinearGradient>
           <SvgLinearGradient id="grad2" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0%"   stopColor={color2} stopOpacity={0.20} />
-            <Stop offset="100%" stopColor={color2} stopOpacity={0.0}  />
+            <Stop offset="0%" stopColor={color2} stopOpacity={0.2} />
+            <Stop offset="100%" stopColor={color2} stopOpacity={0.0} />
           </SvgLinearGradient>
         </Defs>
 
         {/* Grid lines */}
-        {showGrid && yLabels.map(({ v, y }, i) => (
-          <React.Fragment key={i}>
-            <Line
-              x1={PAD.left} y1={y}
-              x2={PAD.left + W_inner} y2={y}
-              stroke={Colors.border}
-              strokeWidth={1}
-              strokeDasharray="4,4"
-            />
-            <SvgText
-              x={PAD.left - 4}
-              y={y + 4}
-              fontSize={9}
-              fill={Colors.muted}
-              textAnchor="end"
-            >
-              {formatY(v)}
-            </SvgText>
-          </React.Fragment>
-        ))}
+        {showGrid &&
+          yLabels.map(({ v, y }, i) => (
+            <React.Fragment key={i}>
+              <Line
+                x1={PAD.left}
+                y1={y}
+                x2={PAD.left + W_inner}
+                y2={y}
+                stroke={Colors.border}
+                strokeWidth={1}
+                strokeDasharray="4,4"
+              />
+              <SvgText
+                x={PAD.left - 4}
+                y={y + 4}
+                fontSize={9}
+                fill={Colors.muted}
+                textAnchor="end"
+              >
+                {formatY(v)}
+              </SvgText>
+            </React.Fragment>
+          ))}
 
         {/* X labels */}
         {xLabels.map(({ label, x }, i) => (
-          <SvgText key={i} x={x} y={height - 4} fontSize={9} fill={Colors.muted} textAnchor="middle">
+          <SvgText
+            key={i}
+            x={x}
+            y={height - 4}
+            fontSize={9}
+            fill={Colors.muted}
+            textAnchor="middle"
+          >
             {label}
           </SvgText>
         ))}
@@ -162,7 +181,12 @@ export const AreaChartView: React.FC<AreaChartViewProps> = ({
             fill="none"
           />
         )}
-        <Path d={buildPath(pts1)} stroke={color} strokeWidth={2.5} fill="none" />
+        <Path
+          d={buildPath(pts1)}
+          stroke={color}
+          strokeWidth={2.5}
+          fill="none"
+        />
 
         {/* End dot */}
         {pts1.length > 0 && (

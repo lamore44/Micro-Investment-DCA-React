@@ -1,8 +1,3 @@
-// ─────────────────────────────────────────────────────────
-//  useMarketData Hook
-//  Exposes market data operations to UI components.
-// ─────────────────────────────────────────────────────────
-
 import { useState, useCallback, useRef } from 'react';
 import { CandleData, KlineInterval } from '../services/api/types';
 import { pingBybit } from '../services/api/bybitApi';
@@ -14,16 +9,15 @@ import {
 } from '../services/marketRepository';
 import { SYMBOL_MAP, Asset } from '../data/mockData';
 
-// ── Types ───────────────────────────────────────────────
 
 interface MarketDataState {
-  /** Fetched kline candle data */
+  // Fetched kline candle data
   candles: CandleData[];
-  /** Whether a fetch is in progress */
+  // Whether a fetch is in progress
   loading: boolean;
-  /** Error message, if any */
+  // Error message, if any
   error: string | null;
-  /** Whether Bybit API is reachable */
+  // Whether Bybit API is reachable
   isOnline: boolean | null;
 }
 
@@ -33,7 +27,6 @@ interface CacheInfo {
   sizeMB: string;
 }
 
-// ── Hook ────────────────────────────────────────────────
 
 export const useMarketData = () => {
   const [state, setState] = useState<MarketDataState>({
@@ -48,15 +41,7 @@ export const useMarketData = () => {
   // Prevent concurrent fetches for the same data
   const fetchingRef = useRef(false);
 
-  /**
-   * Fetch kline data for a given asset and date range.
-   *
-   * @param asset      Asset ticker from the ASSETS list (e.g. 'BTC')
-   * @param interval   Kline interval (default 'D' for daily)
-   * @param startDate  ISO date string (e.g. '2021-01-01')
-   * @param endDate    ISO date string (e.g. '2024-01-01')
-   * @returns The fetched candle data, or null on failure
-   */
+  // Fetch kline data for a given asset and date range.
   const fetchKline = useCallback(
     async (
       asset: Asset,
@@ -106,9 +91,7 @@ export const useMarketData = () => {
     [],
   );
 
-  /**
-   * Get the latest price for an asset.
-   */
+  // Get the latest price for an asset.
   const getLatestPrice = useCallback(
     async (asset: Asset): Promise<number | null> => {
       const symbol = SYMBOL_MAP[asset];
@@ -117,9 +100,7 @@ export const useMarketData = () => {
     [],
   );
 
-  /**
-   * Clear all cached market data, or just for a specific asset.
-   */
+  // Clear all cached market data, or just for a specific asset.
   const clearCache = useCallback(async (asset?: Asset): Promise<void> => {
     const symbol = asset ? SYMBOL_MAP[asset] : undefined;
     await invalidateCache(symbol);
@@ -128,28 +109,22 @@ export const useMarketData = () => {
     setCacheInfo(stats);
   }, []);
 
-  /**
-   * Refresh cache statistics (size, entry count).
-   */
+  // Refresh cache statistics (size, entry count).
   const refreshCacheInfo = useCallback(async (): Promise<CacheInfo> => {
     const stats = await getCacheStats();
     setCacheInfo(stats);
     return stats;
   }, []);
 
-  /**
-   * Check if Bybit API is reachable.
-   */
+  // Check if Bybit API is reachable.
   const checkConnectivity = useCallback(async (): Promise<boolean> => {
     const online = await pingBybit();
     setState(prev => ({ ...prev, isOnline: online }));
     return online;
   }, []);
 
-  /**
-   * Prefetch kline data for popular assets.
-   * Call this on app launch to warm the cache.
-   */
+  // Prefetch kline data for popular assets.
+  // Call this on app launch to warm the cache.
   const prefetchPopularAssets = useCallback(async (): Promise<void> => {
     const popularAssets: Asset[] = ['BTC', 'ETH'];
     const endDate = new Date().toISOString().slice(0, 10);

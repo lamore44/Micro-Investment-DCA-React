@@ -62,7 +62,6 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     strategies,
     totalValue,
     totalInvested,
-    avgRoi,
     bestRoi,
     loading: strategiesLoading,
     error: strategiesError,
@@ -104,7 +103,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const overallRoi =
     totalInvested > 0
       ? ((totalValue - totalInvested) / totalInvested) * 100
-      : 37.5;
+      : 0;
 
   const displayName = useMemo(() => {
     const meta = user?.user_metadata as Record<string, unknown> | undefined;
@@ -219,9 +218,13 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
             <Text style={S.heroInnerTitle}>Portfolio Simulation</Text>
             <View style={S.heroMetrics}>
               {[
-                { l: 'Total Invested', v: fmtUSD(totalInvested || 1200) },
-                { l: 'Portfolio Value', v: fmtUSD(totalValue || 1650) },
-                { l: 'ROI', v: fmtPct(overallRoi), color: Colors.green },
+                { l: 'Total Invested', v: fmtUSD(totalInvested) },
+                { l: 'Portfolio Value', v: fmtUSD(totalValue) },
+                {
+                  l: 'ROI',
+                  v: strategies.length ? fmtPct(overallRoi) : '0.0%',
+                  color: !strategies.length ? undefined : (overallRoi >= 0 ? Colors.green : Colors.red),
+                },
               ].map(m => (
                 <View key={m.l} style={{ flex: 1 }}>
                   <Text style={S.heroMetaLabel}>{m.l}</Text>
@@ -247,7 +250,18 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
           </Card>
           <Card style={[S.statCard, { marginLeft: 8 }]}>
             <Text style={S.statLabel}>🚀 BEST ROI</Text>
-            <Text style={[S.statVal, { color: Colors.green }]}>
+            <Text
+              style={[
+                S.statVal,
+                {
+                  color: !strategies.length
+                    ? Colors.muted
+                    : bestRoi >= 0
+                    ? Colors.green
+                    : Colors.red,
+                },
+              ]}
+            >
               {strategies.length ? fmtPct(bestRoi) : '—'}
             </Text>
           </Card>

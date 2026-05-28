@@ -13,7 +13,8 @@ import {
   MOCK_STRATEGIES, Strategy, generatePortfolioChart,
   fmtUSD, fmtPct, fmtCoins,
 } from '../../data/mockData';
-import { exportToPdf, exportToCsv } from '../../services/exportService';
+import { exportReport, exportToCsv } from '../../services/exportService';
+import { useStrategies } from '../../hooks/useStrategies';
 
 interface Props { navigation: any; route: any; }
 
@@ -21,8 +22,10 @@ export const BacktestScreen: React.FC<Props> = ({ navigation, route }) => {
   const strategy: Strategy = route.params?.strategy ?? MOCK_STRATEGIES[0];
   const mcMonths: number   = route.params?.mcMonths  ?? 24;
   const [saved, setSaved]  = useState(false);
+  const [saving, setSaving] = useState(false);
+  const { saveStrategy }   = useStrategies();
 
-  const chartData = useMemo(() => generatePortfolioChart(strategy), [strategy.id]);
+  const chartData = useMemo(() => generatePortfolioChart(strategy), [strategy]);
 
   const portfolioPts = chartData.map(p => ({ label: p.date, value: p.portfolioValue, value2: p.totalInvested }));
   const roiPts       = chartData.map(p => ({ label: p.date, value: p.roi }));
@@ -30,9 +33,17 @@ export const BacktestScreen: React.FC<Props> = ({ navigation, route }) => {
   const isPos = strategy.roi >= 0;
   const pnl   = strategy.finalValue - strategy.totalInvested;
 
-  const handleSave = () => {
-    setSaved(true);
-    Alert.alert('✓ Saved', 'Strategy saved to your Portfolio.');
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await saveStrategy(strategy);
+      setSaved(true);
+      Alert.alert('✓ Saved', 'Strategy saved to your Portfolio.');
+    } catch (e: any) {
+      Alert.alert('Save Failed', e.message || 'An error occurred while saving.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const goMC = () =>
@@ -57,10 +68,15 @@ export const BacktestScreen: React.FC<Props> = ({ navigation, route }) => {
           <TouchableOpacity
             style={[S.saveBtn, saved && S.saveBtnDone]}
             onPress={handleSave}
+            disabled={saving || saved}
           >
-            <Text style={[S.saveTxt, saved && S.saveTxtDone]}>
-              {saved ? '✓ Saved' : '💾 Save'}
-            </Text>
+            {saving ? (
+              <ActivityIndicator size="small" color={Colors.purple} />
+            ) : (
+              <Text style={[S.saveTxt, saved && S.saveTxtDone]}>
+                {saved ? '✓ Saved' : '💾 Save'}
+              </Text>
+            )}
           </TouchableOpacity>
         </View>
 
@@ -115,36 +131,38 @@ export const BacktestScreen: React.FC<Props> = ({ navigation, route }) => {
         <Divider style={{ marginVertical: Spacing.xl }} />
 
         {/* ── Action buttons ── */}
-        <View style={S.actions}>
-          <TouchableOpacity style={S.actionBtn} onPress={goMC} activeOpacity={0.8}>
-            <Text style={S.actionBtnText}>📊  View Monte Carlo</Text>
+        <View style={S.actionsContainer}>
+          <TouchableOpacity style={S.primaryActionBtn} onPress={goMC} activeOpacity={0.8}>
+            <Text style={S.primaryActionBtnText}>📊  View Monte Carlo Forecast</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={[S.actionBtn, S.actionBtnGhost]}
-            onPress={async () => {
-              try {
-                await exportReport([strategy], `${strategy.asset} Backtest Report`);
-              } catch (e: any) {
-                Alert.alert('Export Failed', e.message);
-              }
-            }}
-            activeOpacity={0.8}
-          >
-            <Text style={[S.actionBtnText, S.actionBtnTextGhost]}>📄  Report</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[S.actionBtn, S.actionBtnGhost]}
-            onPress={async () => {
-              try {
-                await exportToCsv([strategy]);
-              } catch (e: any) {
-                Alert.alert('Export Failed', e.message);
-              }
-            }}
-            activeOpacity={0.8}
-          >
-            <Text style={[S.actionBtnText, S.actionBtnTextGhost]}>📊  CSV</Text>
-          </TouchableOpacity>
+          <View style={S.secondaryActionsRow}>
+            <TouchableOpacity
+              style={S.secondaryActionBtn}
+              onPress={async () => {
+                try {
+                  await exportReport([strategy], `${strategy.asset} Backtest Report`);
+                } catch (e: any) {
+                  Alert.alert('Export Failed', e.message);
+                }
+              }}
+              activeOpacity={0.8}
+            >
+              <Text style={S.secondaryActionBtnText}>📄  PDF Report</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={S.secondaryActionBtn}
+              onPress={async () => {
+                try {
+                  await exportToCsv([strategy]);
+                } catch (e: any) {
+                  Alert.alert('Export Failed', e.message);
+                }
+              }}
+              activeOpacity={0.8}
+            >
+              <Text style={S.secondaryActionBtnText}>📊  CSV Data</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
       </ScrollView>
@@ -177,9 +195,10 @@ const S = StyleSheet.create({
   legendDot:  { width: 8, height: 8, borderRadius: 4 },
   legendText: { ...Typography.caption, textTransform: 'none', letterSpacing: 0, fontSize: 11 },
 
-  actions:           { flexDirection: 'row', gap: 12 },
-  actionBtn:         { flex: 1, backgroundColor: Colors.purple, borderRadius: Radius.md, paddingVertical: 14, alignItems: 'center' },
-  actionBtnGhost:    { backgroundColor: 'transparent', borderWidth: 1, borderColor: Colors.border },
-  actionBtnText:     { color: Colors.white, fontWeight: '700', fontSize: 14 },
-  actionBtnTextGhost:{ color: Colors.muted },
+  actionsContainer: { gap: 10, marginTop: Spacing.md },
+  primaryActionBtn: { backgroundColor: Colors.purple, borderRadius: Radius.md, paddingVertical: 15, alignItems: 'center', justifyContent: 'center', shadowColor: Colors.purple, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4 },
+  primaryActionBtnText: { color: Colors.white, fontWeight: '700', fontSize: 15 },
+  secondaryActionsRow: { flexDirection: 'row', gap: 10 },
+  secondaryActionBtn: { flex: 1, backgroundColor: 'transparent', borderWidth: 1, borderColor: Colors.border, borderRadius: Radius.md, paddingVertical: 14, alignItems: 'center', justifyContent: 'center' },
+  secondaryActionBtnText: { color: Colors.textSecondary, fontWeight: '600', fontSize: 14 },
 });

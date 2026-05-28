@@ -1,9 +1,3 @@
-// ─────────────────────────────────────────────────────────
-//  DataLayerTestScreen
-//  Debug screen to verify all data layer components work.
-//  Navigate here to run automated checks on-device.
-// ─────────────────────────────────────────────────────────
-
 import React, { useState, useCallback } from 'react';
 import {
   View,
@@ -15,7 +9,6 @@ import {
 } from 'react-native';
 import { Colors } from '../../theme';
 
-// ── Services under test ─────────────────────────────────
 import { getKline, getLatestPrice, pingBybit } from '../../services/api/bybitApi';
 import {
   setCache,
@@ -31,7 +24,6 @@ import { getKlineData, getLatestPriceCached, getCacheStats } from '../../service
 import { CandleData } from '../../services/api/types';
 import { SYMBOL_MAP, Asset } from '../../data/mockData';
 
-// ── Types ───────────────────────────────────────────────
 
 type TestStatus = 'idle' | 'running' | 'pass' | 'fail';
 
@@ -41,8 +33,6 @@ interface TestResult {
   detail: string;
   duration?: number;
 }
-
-// ── Component ───────────────────────────────────────────
 
 export const DataLayerTestScreen: React.FC = () => {
   const [results, setResults] = useState<TestResult[]>([]);
@@ -83,7 +73,7 @@ export const DataLayerTestScreen: React.FC = () => {
 
     let idx = 0;
 
-    // ── Test 1: Cache Keys ────────────────────────────
+    //  Test 1: Cache Keys 
     try {
       updateResult(idx, { status: 'running', detail: 'Testing...' });
       const t0 = Date.now();
@@ -110,7 +100,7 @@ export const DataLayerTestScreen: React.FC = () => {
     }
     idx++;
 
-    // ── Test 2: Cache set & get ───────────────────────
+    // Test 2: Cache set & get
     try {
       updateResult(idx, { status: 'running', detail: 'Testing...' });
       const t0 = Date.now();
@@ -134,7 +124,7 @@ export const DataLayerTestScreen: React.FC = () => {
     }
     idx++;
 
-    // ── Test 3: Cache TTL expiry ──────────────────────
+    // Test 3: Cache TTL expiry
     try {
       updateResult(idx, { status: 'running', detail: 'Testing TTL (1ms)...' });
       const t0 = Date.now();
@@ -162,7 +152,7 @@ export const DataLayerTestScreen: React.FC = () => {
     }
     idx++;
 
-    // ── Test 4: Cache clear ───────────────────────────
+    // Test 4: Cache clear
     try {
       updateResult(idx, { status: 'running', detail: 'Clearing cache...' });
       const t0 = Date.now();
@@ -185,7 +175,7 @@ export const DataLayerTestScreen: React.FC = () => {
     }
     idx++;
 
-    // ── Test 5: Bybit ping ────────────────────────────
+    // Test 5: Bybit ping
     try {
       updateResult(idx, { status: 'running', detail: 'Pinging api.bybit.com...' });
       const t0 = Date.now();
@@ -204,7 +194,7 @@ export const DataLayerTestScreen: React.FC = () => {
     }
     idx++;
 
-    // ── Test 6: Bybit kline fetch ─────────────────────
+    //  Test 6: Bybit kline fetch
     let fetchedCandles: CandleData[] = [];
     try {
       updateResult(idx, { status: 'running', detail: 'Fetching BTCUSDT daily kline (3 candles)...' });
@@ -237,7 +227,7 @@ export const DataLayerTestScreen: React.FC = () => {
     }
     idx++;
 
-    // ── Test 7: Latest price ──────────────────────────
+    // Test 7: Latest price
     try {
       updateResult(idx, { status: 'running', detail: 'Fetching BTC latest price...' });
       const t0 = Date.now();
@@ -258,7 +248,7 @@ export const DataLayerTestScreen: React.FC = () => {
     }
     idx++;
 
-    // ── Test 8: Repository — fetch + cache ────────────
+    //  Test 8: Repository - fetch + cache
     try {
       updateResult(idx, { status: 'running', detail: 'Fetching BTC 1-month data via Repository...' });
       const t0 = Date.now();
@@ -286,7 +276,7 @@ export const DataLayerTestScreen: React.FC = () => {
     }
     idx++;
 
-    // ── Test 9: Repository — cache hit ────────────────
+    // Test 9: Repository - cache hit
     try {
       updateResult(idx, { status: 'running', detail: 'Re-fetching same data (should hit cache)...' });
       const t0 = Date.now();
@@ -316,7 +306,7 @@ export const DataLayerTestScreen: React.FC = () => {
     }
     idx++;
 
-    // ── Test 10: Cache stats ──────────────────────────
+    // Test 10: Cache stats
     try {
       updateResult(idx, { status: 'running', detail: 'Reading cache stats...' });
       const t0 = Date.now();
@@ -333,7 +323,7 @@ export const DataLayerTestScreen: React.FC = () => {
     }
     idx++;
 
-    // ── Test 11: Full integration ─────────────────────
+    //  Test 11: Full integration
     try {
       updateResult(idx, { status: 'running', detail: 'Running full DCA simulation...' });
       const t0 = Date.now();
@@ -388,7 +378,7 @@ export const DataLayerTestScreen: React.FC = () => {
     setRunning(false);
   }, []);
 
-  // ── Render ──────────────────────────────────────────
+  // Render
 
   const statusIcon = (s: TestStatus) => {
     switch (s) {

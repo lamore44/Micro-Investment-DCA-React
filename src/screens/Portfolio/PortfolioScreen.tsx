@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import { Colors, Typography, Spacing, Radius } from '../../theme';
 import { Card } from '../../components/common/Card';
 import { MetricCard } from '../../components/common/MetricCard';
@@ -31,8 +32,15 @@ export const PortfolioScreen: React.FC<Props> = ({ navigation }) => {
     winners,
     loading: strategiesLoading,
     error: strategiesError,
+    refresh: refreshStrategies,
   } = useStrategies();
   const [exporting, setExporting] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      refreshStrategies();
+    }, [refreshStrategies])
+  );
   const maxBarRoi = Math.max(...strategies.map(s => Math.abs(s.roi)), 1);
 
   const totalStrategiesLabel = strategiesLoading ? '—' : `${strategies.length}`;

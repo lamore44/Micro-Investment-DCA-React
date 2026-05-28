@@ -1,8 +1,6 @@
-// ─────────────────────────────────────────────────────────
 //  Market Repository
 //  Single source of truth for kline data.
 //  Strategy: cache-first → network-fallback → offline-stale
-// ─────────────────────────────────────────────────────────
 
 import { getKline, getLatestPrice as fetchLatestPrice } from './api/bybitApi';
 import {
@@ -24,7 +22,6 @@ import {
 } from './cache/cacheService';
 import { klineKey, tickerKey } from './cache/cacheKeys';
 
-// ── Helpers ─────────────────────────────────────────────
 
 /**
  * Determine the appropriate TTL based on whether the data range
@@ -37,10 +34,6 @@ function chooseTTL(endMs: number): number {
   return endMs >= oneDayAgo ? TTL_RECENT_KLINE : TTL_HISTORICAL_KLINE;
 }
 
-/**
- * Calculate how many pagination chunks are needed
- * to cover a date range for a given interval.
- */
 function calculateChunks(
   startMs: number,
   endMs: number,
@@ -70,8 +63,6 @@ function calculateChunks(
   return chunks;
 }
 
-// ── Public API ──────────────────────────────────────────
-
 /**
  * Fetch kline data for a symbol and date range.
  *
@@ -81,12 +72,6 @@ function calculateChunks(
  * 3. Save fetched data to cache
  * 4. If network fails → try returning stale (expired) cache data
  * 5. If nothing available → throw error
- *
- * @param symbol    Bybit trading pair, e.g. 'BTCUSDT'
- * @param interval  Candle interval, e.g. 'D' for daily
- * @param startDate ISO date string, e.g. '2021-01-01'
- * @param endDate   ISO date string, e.g. '2024-01-01'
- * @returns Array of CandleData sorted chronologically
  */
 export async function getKlineData(
   symbol: string,
@@ -98,13 +83,13 @@ export async function getKlineData(
   const endMs = new Date(endDate).getTime();
   const cacheKeyStr = klineKey(symbol, interval, startMs, endMs);
 
-  // ── Step 1: Try fresh cache ─────────────────────────
+  // Step 1: Try fresh cache
   const cached = await getCache<CandleData[]>(cacheKeyStr);
   if (cached && cached.length > 0) {
     return cached;
   }
 
-  // ── Step 2: Fetch from Bybit with pagination ────────
+  //Step 2: Fetch from Bybit with pagination
   try {
     const allCandles = await fetchWithPagination(
       symbol,
@@ -113,13 +98,13 @@ export async function getKlineData(
       endMs,
     );
 
-    // ── Step 3: Save to cache ───────────────────────
+    // Step 3: Save to cache
     const ttl = chooseTTL(endMs);
     await setCache(cacheKeyStr, allCandles, ttl);
 
     return allCandles;
   } catch (networkError) {
-    // ── Step 4: Fallback to stale cache ─────────────
+    // Step 4: Fallback to stale cache
     const stale = await getCache<CandleData[]>(cacheKeyStr, true);
     if (stale && stale.length > 0) {
       console.warn(
@@ -129,7 +114,7 @@ export async function getKlineData(
       return stale;
     }
 
-    // ── Step 5: Nothing available ───────────────────
+    // Step 5: Nothing available
     throw new Error(
       `Failed to fetch kline data for ${symbol}: ${
         networkError instanceof Error ? networkError.message : 'Unknown error'
@@ -201,9 +186,7 @@ export async function getLatestPriceCached(
 
 /**
  * Invalidate (clear) cached data.
- *
- * @param symbol  If provided, only clear cache for this symbol.
- *                If omitted, clear ALL MicroDCA cache.
+ * If provided, only clear cache for this symbol. If omitted, clear ALL MicroDCA cache.
  */
 export async function invalidateCache(symbol?: string): Promise<void> {
   if (symbol) {
