@@ -22,18 +22,18 @@ import { CandleData } from '../services/api/types';
 // ── Types ───────────────────────────────────────────────
 
 interface SimParams {
-  asset:     Asset;
-  amount:    number;
+  asset: Asset;
+  amount: number;
   frequency: Frequency;
   startDate: string;
-  endDate:   string;
-  mcMonths:  number;
+  endDate: string;
+  mcMonths: number;
 }
 
 interface SimResult {
-  strategy:  Strategy;
+  strategy: Strategy;
   chartData: ChartPoint[];
-  mcData:    MCResult[];
+  mcData: MCResult[];
   /** Whether this result was computed from real Bybit data or mock fallback */
   isRealData: boolean;
 }
@@ -52,9 +52,14 @@ interface SimResult {
  */
 function getFrequencyDays(frequency: Frequency): number {
   switch (frequency) {
-    case 'daily':   return 1;
-    case 'weekly':  return 7;
-    case 'monthly': return 30;
+    case 'daily':
+      return 1;
+    case 'weekly':
+      return 7;
+    case 'biweekly':
+      return 14;
+    case 'monthly':
+      return 30;
   }
 }
 
@@ -108,9 +113,8 @@ function runDCAOnRealData(
     if (portfolioValue > peakValue) {
       peakValue = portfolioValue;
     }
-    const drawdown = peakValue > 0
-      ? ((peakValue - portfolioValue) / peakValue) * 100
-      : 0;
+    const drawdown =
+      peakValue > 0 ? ((peakValue - portfolioValue) / peakValue) * 100 : 0;
     if (drawdown > maxDrawdown) {
       maxDrawdown = drawdown;
     }
@@ -122,9 +126,10 @@ function runDCAOnRealData(
     prevValue = portfolioValue;
 
     // Record chart point
-    const roi = totalInvested > 0
-      ? ((portfolioValue - totalInvested) / totalInvested) * 100
-      : 0;
+    const roi =
+      totalInvested > 0
+        ? ((portfolioValue - totalInvested) / totalInvested) * 100
+        : 0;
 
     chartData.push({
       date: new Date(candle.startTime).toISOString().slice(0, 7),
@@ -139,30 +144,33 @@ function runDCAOnRealData(
   // Final valuation using the last candle
   const lastCandle = candles[candles.length - 1];
   const finalValue = lastCandle ? totalCoins * lastCandle.close : totalInvested;
-  const roi = totalInvested > 0
-    ? ((finalValue - totalInvested) / totalInvested) * 100
-    : 0;
+  const roi =
+    totalInvested > 0
+      ? ((finalValue - totalInvested) / totalInvested) * 100
+      : 0;
 
   // CAGR
   const years = (endMs - startMs) / (365.25 * 86_400_000);
-  const cagr = years > 0
-    ? (Math.pow(finalValue / Math.max(totalInvested, 1), 1 / years) - 1) * 100
-    : 0;
+  const cagr =
+    years > 0
+      ? (Math.pow(finalValue / Math.max(totalInvested, 1), 1 / years) - 1) * 100
+      : 0;
 
   // Sharpe ratio (annualised, assuming risk-free rate ≈ 0)
-  const avgReturn = returns.length > 0
-    ? returns.reduce((a, b) => a + b, 0) / returns.length
-    : 0;
-  const stdReturn = returns.length > 1
-    ? Math.sqrt(
-        returns.reduce((sum, r) => sum + Math.pow(r - avgReturn, 2), 0)
-        / (returns.length - 1),
-      )
-    : 0;
+  const avgReturn =
+    returns.length > 0
+      ? returns.reduce((a, b) => a + b, 0) / returns.length
+      : 0;
+  const stdReturn =
+    returns.length > 1
+      ? Math.sqrt(
+          returns.reduce((sum, r) => sum + Math.pow(r - avgReturn, 2), 0) /
+            (returns.length - 1),
+        )
+      : 0;
   const periodsPerYear = 365 / getFrequencyDays(params.frequency);
-  const sharpeRatio = stdReturn > 0
-    ? (avgReturn / stdReturn) * Math.sqrt(periodsPerYear)
-    : 0;
+  const sharpeRatio =
+    stdReturn > 0 ? (avgReturn / stdReturn) * Math.sqrt(periodsPerYear) : 0;
 
   return {
     strategy: {
@@ -222,34 +230,36 @@ function findClosestCandle(
  * Used when Bybit API is unreachable and no cache exists.
  */
 function runMockSimulation(params: SimParams): SimResult {
-  const base = MOCK_STRATEGIES.find(s => s.asset === params.asset)
-            ?? MOCK_STRATEGIES[0];
+  const base =
+    MOCK_STRATEGIES.find(s => s.asset === params.asset) ?? MOCK_STRATEGIES[0];
 
   const freqDays = getFrequencyDays(params.frequency);
-  const daysDiff = Math.max(1,
-    (new Date(params.endDate).getTime() - new Date(params.startDate).getTime())
-    / 86_400_000,
+  const daysDiff = Math.max(
+    1,
+    (new Date(params.endDate).getTime() -
+      new Date(params.startDate).getTime()) /
+      86_400_000,
   );
-  const steps         = Math.ceil(daysDiff / freqDays);
+  const steps = Math.ceil(daysDiff / freqDays);
   const totalInvested = params.amount * steps;
-  const scale         = totalInvested / (base.totalInvested || 1);
+  const scale = totalInvested / (base.totalInvested || 1);
 
   const strategy: Strategy = {
     ...base,
-    id:           String(Date.now()),
-    asset:        params.asset,
-    amount:       params.amount,
-    frequency:    params.frequency,
-    startDate:    params.startDate,
-    endDate:      params.endDate,
+    id: String(Date.now()),
+    asset: params.asset,
+    amount: params.amount,
+    frequency: params.frequency,
+    startDate: params.startDate,
+    endDate: params.endDate,
     totalInvested,
-    finalValue:   base.finalValue * scale,
-    totalCoins:   base.totalCoins * scale,
-    createdAt:    new Date().toISOString().slice(0, 10),
+    finalValue: base.finalValue * scale,
+    totalCoins: base.totalCoins * scale,
+    createdAt: new Date().toISOString().slice(0, 10),
   };
 
   const chartData = generatePortfolioChart(strategy);
-  const mcData    = generateMonteCarlo(strategy.finalValue, params.mcMonths);
+  const mcData = generateMonteCarlo(strategy.finalValue, params.mcMonths);
 
   return { strategy, chartData, mcData, isRealData: false };
 }
@@ -257,9 +267,9 @@ function runMockSimulation(params: SimParams): SimResult {
 // ── Hook ────────────────────────────────────────────────
 
 export const useSimulation = () => {
-  const [loading, setLoading]   = useState(false);
-  const [result,  setResult]    = useState<SimResult | null>(null);
-  const [error,   setError]     = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<SimResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const run = useCallback(async (params: SimParams) => {
     setLoading(true);
@@ -299,10 +309,7 @@ export const useSimulation = () => {
           createdAt: new Date().toISOString().slice(0, 10),
         };
 
-        const mcData = generateMonteCarlo(
-          strategy.finalValue,
-          params.mcMonths,
-        );
+        const mcData = generateMonteCarlo(strategy.finalValue, params.mcMonths);
 
         const simResult: SimResult = {
           strategy,
