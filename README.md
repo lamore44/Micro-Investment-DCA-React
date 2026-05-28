@@ -218,10 +218,11 @@ MicroDCA/
 - [x] Supabase Realtime on `strategies` + `backtest_results` with in-app notification banner
 - [x] PDF export (PDFBolt API) + CSV export with native share sheet
 - [x] CI/CD pipeline (lint + bundle check + APK build)
+- [x] Store strategies & backtest results in Supabase PostgreSQL
+- [x] Monte Carlo parameters data layer ($\mu$ & $\sigma$ calculations) and cache utility (`src/services/marketRepository.ts`)
 
 ### 🚧 In Progress / Next
-- [ ] Real DCA backtest engine + Monte Carlo GBM (JS/TS — on-device)
-- [ ] Store strategies & backtest results in Supabase PostgreSQL
+- [ ] Monte Carlo GBM simulation engine (Jaki) & UI integration (Gian)
 - [ ] Implement sync with `react-native-background-fetch` + NetInfo listener
 - [ ] Push notifications via Firebase Cloud Messaging (FCM)
 
