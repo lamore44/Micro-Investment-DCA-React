@@ -20,7 +20,7 @@ import {
   TTL_RECENT_KLINE,
   TTL_TICKER,
 } from './cache/cacheService';
-import { klineKey, tickerKey } from './cache/cacheKeys';
+import { klineKey, tickerKey, mcParamsKey } from './cache/cacheKeys';
 
 
 /**
@@ -217,4 +217,72 @@ export async function getCacheStats(): Promise<{
         ? `${(sizeBytes / (1024 * 1024)).toFixed(2)} MB`
         : 'Unknown',
   };
+}
+
+export interface MonteCarloParams {
+  dailyDrift: number;
+  dailyVolatility: number;
+}
+
+/**
+ * Calculate the historical daily log returns, drift (mean log returns), and
+ * volatility (standard deviation of log returns) from Bybit daily kline data.
+ * Caches the result to prevent redundant calculations and API calls.
+ */
+export async function getMonteCarloParams(
+  symbol: string,
+  startDate: string,
+  endDate: string,
+): Promise<MonteCarloParams> {
+  const startMs = new Date(startDate).getTime();
+  const endMs = new Date(endDate).getTime();
+  const cacheKeyStr = mcParamsKey(symbol, startMs, endMs);
+
+  // 1. Check cache first
+  const cached = await getCache<MonteCarloParams>(cacheKeyStr);
+  if (cached !== null) {
+    return cached;
+  }
+
+  // 2. Fetch daily candles (interval 'D')
+  const candles = await getKlineData(symbol, 'D', startDate, endDate);
+  if (candles.length < 2) {
+    return { dailyDrift: 0, dailyVolatility: 0 };
+  }
+
+  // 3. Calculate daily log returns
+  const logReturns: number[] = [];
+  for (let i = 1; i < candles.length; i++) {
+    const prevClose = candles[i - 1].close;
+    const currClose = candles[i].close;
+    if (prevClose > 0 && currClose > 0) {
+      logReturns.push(Math.log(currClose / prevClose));
+    }
+  }
+
+  if (logReturns.length === 0) {
+    return { dailyDrift: 0, dailyVolatility: 0 };
+  }
+
+  // 4. Calculate daily drift (mean return)
+  const sum = logReturns.reduce((acc, val) => acc + val, 0);
+  const dailyDrift = sum / logReturns.length;
+
+  // 5. Calculate daily volatility (sample standard deviation)
+  let varianceSum = 0;
+  for (const r of logReturns) {
+    varianceSum += Math.pow(r - dailyDrift, 2);
+  }
+  const variance = logReturns.length > 1
+    ? varianceSum / (logReturns.length - 1)
+    : 0;
+  const dailyVolatility = Math.sqrt(variance);
+
+  const params: MonteCarloParams = { dailyDrift, dailyVolatility };
+
+  // 6. Save parameters to cache with appropriate TTL
+  const ttl = chooseTTL(endMs);
+  await setCache(cacheKeyStr, params, ttl);
+
+  return params;
 }

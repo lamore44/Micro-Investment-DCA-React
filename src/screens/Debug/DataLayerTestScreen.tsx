@@ -7,22 +7,15 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
-import { Colors } from '../../theme';
-
 import { getKline, getLatestPrice, pingBybit } from '../../services/api/bybitApi';
 import {
   setCache,
   getCache,
-  isCacheValid,
   clearAllCache,
-  getCacheSize,
-  getCacheEntryCount,
-  TTL_HISTORICAL_KLINE,
 } from '../../services/cache/cacheService';
 import { klineKey, parseKlineKey, tickerKey } from '../../services/cache/cacheKeys';
-import { getKlineData, getLatestPriceCached, getCacheStats } from '../../services/marketRepository';
+import { getKlineData, getCacheStats, getMonteCarloParams } from '../../services/marketRepository';
 import { CandleData } from '../../services/api/types';
-import { SYMBOL_MAP, Asset } from '../../data/mockData';
 
 
 type TestStatus = 'idle' | 'running' | 'pass' | 'fail';
@@ -62,6 +55,7 @@ export const DataLayerTestScreen: React.FC = () => {
       '9. Repository — cache hit (same query again)',
       '10. Repository — cache stats',
       '11. Full Integration — useSimulation flow',
+      '12. Monte Carlo — getMonteCarloParams',
     ];
 
     const initial: TestResult[] = testNames.map(name => ({
@@ -372,6 +366,29 @@ export const DataLayerTestScreen: React.FC = () => {
       updateResult(idx, {
         status: 'fail',
         detail: `Integration test failed: ${e.message}`,
+      });
+    }
+
+    idx++;
+
+    // Test 12: Monte Carlo Params
+    try {
+      updateResult(idx, { status: 'running', detail: 'Calculating MC params...' });
+      const t0 = Date.now();
+
+      const params = await getMonteCarloParams('BTCUSDT', '2024-01-01', '2024-06-01');
+
+      updateResult(idx, {
+        status: params.dailyDrift !== 0 || params.dailyVolatility !== 0 ? 'pass' : 'fail',
+        detail: `Daily Drift (mu): ${(params.dailyDrift * 100).toFixed(4)}%\n` +
+          `Daily Volatility (sigma): ${(params.dailyVolatility * 100).toFixed(4)}%\n` +
+          `Annualized Vol: ${(params.dailyVolatility * Math.sqrt(365) * 100).toFixed(2)}%`,
+        duration: Date.now() - t0,
+      });
+    } catch (e: any) {
+      updateResult(idx, {
+        status: 'fail',
+        detail: `Monte Carlo calculation failed: ${e.message}`,
       });
     }
 

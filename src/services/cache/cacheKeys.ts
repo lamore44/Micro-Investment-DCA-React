@@ -21,6 +21,16 @@ export function tickerKey(symbol: string): string {
   return `${CACHE_PREFIX}:ticker:${symbol}`;
 }
 
+// Build a cache key for Monte Carlo volatility & drift parameters.
+// Format: `@microdca:mc_params:{symbol}:{start}:{end}`
+export function mcParamsKey(
+  symbol: string,
+  startMs: number,
+  endMs: number,
+): string {
+  return `${CACHE_PREFIX}:mc_params:${symbol}:${startMs}:${endMs}`;
+}
+
 // Build a cache key for the asset list / metadata.
 export function assetListKey(): string {
   return `${CACHE_PREFIX}:assets`;
