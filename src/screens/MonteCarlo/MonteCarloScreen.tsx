@@ -4,11 +4,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors, Typography, Spacing, Radius } from '../../theme';
-import { Card }       from '../../components/common/Card';
-import { MetricCard } from '../../components/common/MetricCard';
-import { MCChartView } from '../../components/charts/MCChartView';
+import { Card }            from '../../components/common/Card';
+import { MetricCard }      from '../../components/common/MetricCard';
+import { ConfidenceBadge } from '../../components/common/ConfidenceBadge';
+import { MCChartView }     from '../../components/charts/MCChartView';
 import { fmtUSD, fmtPct } from '../../data/mockData';
-import { runGBMSimulation, formatReturn } from '../../services/simulation/gbmSimulator';
+import { runGBMSimulation } from '../../services/simulation/gbmSimulator';
 import { getMonteCarloParams } from '../../services/marketRepository';
 
 interface Props {
@@ -34,19 +35,17 @@ const rowStyles = StyleSheet.create({
 });
 
 export const MonteCarloScreen: React.FC<Props> = ({ route }) => {
-  const strategy = route.params?.strategy;
-  const mcMonths = route.params?.mcMonths ?? 12;
-  const startVal = strategy?.finalValue ?? 0;
+  const strategy  = route.params?.strategy;
+  const mcMonths  = route.params?.mcMonths ?? 12;
+  const startVal  = strategy?.finalValue ?? 0;
 
-  // Parameter dari strategy buat ambil data historis
   const symbol    = strategy?.symbol    ?? 'BTCUSDT';
   const startDate = strategy?.startDate ?? '2023-01-01';
   const endDate   = strategy?.endDate   ?? new Date().toISOString().split('T')[0];
 
-  // State simulasi
-  const [loading, setLoading]   = useState(true);
-  const [error, setError]       = useState<string | null>(null);
-  const [mcData, setMcData]     = useState<ReturnType<typeof runGBMSimulation> | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState<string | null>(null);
+  const [mcData, setMcData]   = useState<ReturnType<typeof runGBMSimulation> | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -56,14 +55,12 @@ export const MonteCarloScreen: React.FC<Props> = ({ route }) => {
         setLoading(true);
         setError(null);
 
-        // 1. Ambil parameter μ dan σ dari data historis
         const { dailyDrift, dailyVolatility } = await getMonteCarloParams(
           symbol,
           startDate,
           endDate,
         );
 
-        // 2. Jalankan GBM simulation
         const result = runGBMSimulation(
           startVal,
           dailyDrift,
@@ -89,12 +86,21 @@ export const MonteCarloScreen: React.FC<Props> = ({ route }) => {
     return () => { cancelled = true; };
   }, [symbol, startDate, endDate, startVal, mcMonths]);
 
-  // Format data percentileSeries supaya kompatibel sama MCChartView
-  // MCChartView butuh array dengan field: month, worst, low, median, high, best
+  // Prepend titik bulan ke-0 agar garis cone dimulai dari satu titik konvergen
   const chartData = useMemo(() => {
     if (!mcData) return [];
-    return mcData.percentileSeries;
-  }, [mcData]);
+
+    const origin = {
+      month:  0,
+      worst:  startVal,
+      low:    startVal,
+      median: startVal,
+      high:   startVal,
+      best:   startVal,
+    };
+
+    return [origin, ...mcData.percentileSeries];
+  }, [mcData, startVal]);
 
   // ── Loading state ──
   if (loading) {
@@ -102,7 +108,10 @@ export const MonteCarloScreen: React.FC<Props> = ({ route }) => {
       <SafeAreaView style={styles.safe}>
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={Colors.purple} />
-          <Text style={styles.loadingText}>Running 500 simulations...</Text>
+          <Text style={styles.loadingText}>Running GBM simulation</Text>
+          <Text style={styles.loadingDetail}>
+            500 scenarios · {mcMonths} months · {symbol}
+          </Text>
         </View>
       </SafeAreaView>
     );
@@ -113,13 +122,13 @@ export const MonteCarloScreen: React.FC<Props> = ({ route }) => {
     return (
       <SafeAreaView style={styles.safe}>
         <View style={styles.centered}>
-          <Text style={styles.errorText}>⚠️ {error ?? 'No simulation data'}</Text>
+          <Text style={styles.errorText}>Error: {error ?? 'No simulation data'}</Text>
         </View>
       </SafeAreaView>
     );
   }
 
-  // ── Kalkulasi return untuk ditampilkan ──
+  // ── Kalkulasi return ──
   const medianR = ((mcData.medianFinalValue - startVal) / startVal) * 100;
   const bestR   = ((mcData.bestFinalValue   - startVal) / startVal) * 100;
   const worstR  = ((mcData.worstFinalValue  - startVal) / startVal) * 100;
@@ -137,18 +146,17 @@ export const MonteCarloScreen: React.FC<Props> = ({ route }) => {
           500 simulated scenarios based on historical volatility
           · {mcMonths} months forward
         </Text>
+        <ConfidenceBadge probability={mcData.probabilityOfProfit} />
 
         {/* ── Scenario metric cards ── */}
         <View style={styles.metricRow}>
           <MetricCard
-            icon="📍"
             label="Starting Value"
             value={fmtUSD(startVal)}
             flex={1}
           />
           <View style={{ width: 10 }} />
           <MetricCard
-            icon="🚀"
             label="Best Case (95%)"
             value={fmtUSD(last.best)}
             valueColor={Colors.green}
@@ -158,7 +166,6 @@ export const MonteCarloScreen: React.FC<Props> = ({ route }) => {
         </View>
         <View style={[styles.metricRow, { marginTop: 10 }]}>
           <MetricCard
-            icon="⚖️"
             label="Median (50th %ile)"
             value={fmtUSD(last.median)}
             valueColor={Colors.violet}
@@ -167,7 +174,6 @@ export const MonteCarloScreen: React.FC<Props> = ({ route }) => {
           />
           <View style={{ width: 10 }} />
           <MetricCard
-            icon="⚠️"
             label="Worst Case (5%)"
             value={fmtUSD(last.worst)}
             valueColor={Colors.red}
@@ -182,18 +188,24 @@ export const MonteCarloScreen: React.FC<Props> = ({ route }) => {
           <Text style={styles.chartSub}>
             Shaded bands show 5–95%, 25–75% percentile ranges and median trajectory
           </Text>
+          <Text style={styles.chartMeta}>
+            {symbol} · {mcMonths}mo projection · {mcData.percentileSeries.length} data points
+          </Text>
           <MCChartView data={chartData} height={250} />
         </Card>
 
         {/* ── Outcome summary ── */}
         <Card style={styles.summaryCard}>
           <Text style={styles.sectionLabel}>EXPECTED OUTCOME SUMMARY</Text>
-          {/* Probability of profit: sekarang nilai REAL bukan ~68% */}
-          <Row
-            label="Probability of profit"
-            value={`${mcData.probabilityOfProfit.toFixed(1)}%`}
-            valueColor={Colors.green}
-          />
+
+          {/* Probability of profit — highlighted row */}
+          <View style={styles.profitHighlight}>
+            <Text style={styles.profitLabel}>Probability of profit</Text>
+            <Text style={styles.profitValue}>
+              {mcData.probabilityOfProfit.toFixed(1)}%
+            </Text>
+          </View>
+
           <Row
             label="Median expected return"
             value={fmtPct(medianR)}
@@ -209,6 +221,10 @@ export const MonteCarloScreen: React.FC<Props> = ({ route }) => {
             value={fmtPct(worstR)}
             valueColor={Colors.red}
           />
+
+          {/* Separator */}
+          <View style={styles.separator} />
+
           <Row label="Simulations run"   value="500"                  />
           <Row label="Projection period" value={`${mcMonths} months`} />
           <Row label="Volatility model"  value="GBM" valueColor={Colors.violet} />
@@ -217,8 +233,7 @@ export const MonteCarloScreen: React.FC<Props> = ({ route }) => {
         {/* ── Disclaimer ── */}
         <View style={styles.disclaimer}>
           <Text style={styles.disclaimerText}>
-            ⚠️{' '}
-            <Text style={styles.disclaimerBold}>Disclaimer: </Text>
+            <Text style={styles.disclaimerBold}>Note: </Text>
             Monte Carlo projections are probabilistic estimates based on historical
             volatility patterns. Past performance does not guarantee future results.
             This is a simulation tool only — not financial advice.
@@ -233,27 +248,56 @@ const styles = StyleSheet.create({
   safe:    { flex: 1, backgroundColor: Colors.bgPrimary },
   content: { paddingHorizontal: Spacing.xl, paddingBottom: Spacing.xxxl },
 
-  centered:    { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12 },
-  loadingText: { ...Typography.bodyS, color: Colors.muted, marginTop: 8 },
-  errorText:   { ...Typography.bodyS, color: Colors.red, textAlign: 'center', paddingHorizontal: Spacing.xl },
+  centered:      { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12 },
+  loadingText:   { ...Typography.bodyS, color: Colors.muted, marginTop: 8 },
+  loadingDetail: { ...Typography.caption, textTransform: 'none', letterSpacing: 0, fontSize: 11, color: Colors.muted, marginTop: 2 },
+  errorText:     { ...Typography.bodyS, color: Colors.red, textAlign: 'center', paddingHorizontal: Spacing.xl },
 
   title:    { ...Typography.h1, marginTop: Spacing.xl, marginBottom: 6 },
-  subtitle: { ...Typography.caption, textTransform: 'none', letterSpacing: 0, fontSize: 12, lineHeight: 18, color: Colors.muted, marginBottom: Spacing.lg },
+  subtitle: { ...Typography.caption, textTransform: 'none', letterSpacing: 0, fontSize: 12, lineHeight: 18, color: Colors.muted, marginBottom: 0 },
 
   metricRow: { flexDirection: 'row' },
 
   chartCard:  { padding: Spacing.xl, marginTop: 18 },
   chartTitle: { ...Typography.h3, fontSize: 16, marginBottom: 4 },
-  chartSub:   { ...Typography.caption, textTransform: 'none', letterSpacing: 0, fontSize: 11, lineHeight: 16, marginBottom: Spacing.lg },
+  chartSub:   { ...Typography.caption, textTransform: 'none', letterSpacing: 0, fontSize: 11, lineHeight: 16, color: Colors.muted },
+  chartMeta:  { ...Typography.caption, textTransform: 'none', letterSpacing: 0, fontSize: 10, color: Colors.muted, marginTop: 2, marginBottom: Spacing.lg },
 
   summaryCard:  { padding: Spacing.xl, marginTop: 14 },
   sectionLabel: { ...Typography.label, marginBottom: Spacing.md },
 
+  profitHighlight: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    backgroundColor: Colors.greenDim,
+    borderRadius: Radius.sm,
+    borderWidth: 1,
+    borderColor: `${Colors.green}33`,
+    marginBottom: Spacing.sm,
+  },
+  profitLabel: {
+    ...Typography.bodyS,
+    color: Colors.textSecondary,
+  },
+  profitValue: {
+    ...Typography.valueM,
+    color: Colors.green,
+  },
+
+  separator: {
+    height: 1,
+    backgroundColor: Colors.borderSubtle,
+    marginVertical: Spacing.sm,
+  },
+
   disclaimer: {
     marginTop: Spacing.lg,
-    backgroundColor: Colors.redDim,
+    backgroundColor: Colors.bgCard,
     borderWidth: 1,
-    borderColor: `${Colors.red}44`,
+    borderColor: Colors.border,
     borderRadius: Radius.sm,
     padding: Spacing.lg,
   },
@@ -266,7 +310,7 @@ const styles = StyleSheet.create({
     color: Colors.muted,
   },
   disclaimerBold: {
-    color: Colors.red,
+    color: Colors.textSecondary,
     fontWeight: '700',
   },
 });

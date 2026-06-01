@@ -25,7 +25,12 @@ export const MetricCard: React.FC<MetricCardProps> = ({
     <Text style={styles.label} numberOfLines={1}>
       {icon ? `${icon}  ` : ''}{label}
     </Text>
-    <Text style={[styles.value, valueColor ? { color: valueColor } : null]}>
+    <Text
+      style={[styles.value, valueColor ? { color: valueColor } : null]}
+      adjustsFontSizeToFit
+      numberOfLines={1}
+      minimumFontScale={0.7}
+    >
       {value}
     </Text>
     {sub ? <Text style={styles.sub} numberOfLines={1}>{sub}</Text> : null}

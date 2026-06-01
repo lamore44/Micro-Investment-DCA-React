@@ -85,14 +85,12 @@ export const PortfolioScreen: React.FC<Props> = ({ navigation }) => {
         {/* ── Summary metrics ── */}
         <View style={styles.metricsRow}>
           <MetricCard
-            icon="📋"
             label="Total Strategies"
             value={totalStrategiesLabel}
             flex={1}
           />
           <View style={{ width: 10 }} />
           <MetricCard
-            icon="💰"
             label="Total Value"
             value={totalValueLabel}
             valueColor={Colors.green}
@@ -101,7 +99,6 @@ export const PortfolioScreen: React.FC<Props> = ({ navigation }) => {
         </View>
         <View style={[styles.metricsRow, { marginTop: 10 }]}>
           <MetricCard
-            icon="📈"
             label="Avg ROI"
             value={avgRoiLabel}
             valueColor={avgRoiColor}
@@ -109,7 +106,6 @@ export const PortfolioScreen: React.FC<Props> = ({ navigation }) => {
           />
           <View style={{ width: 10 }} />
           <MetricCard
-            icon="✅"
             label="Winners"
             value={winnersLabel}
             valueColor={Colors.green}
@@ -255,7 +251,7 @@ export const PortfolioScreen: React.FC<Props> = ({ navigation }) => {
                       onPress={() => handleDelete(s.id)}
                       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                     >
-                      <Text style={styles.deleteIcon}>🗑</Text>
+                      <Text style={styles.deleteIcon}>x</Text>
                     </TouchableOpacity>
                   </TouchableOpacity>
                   {idx < strategies.length - 1 && <Divider />}
@@ -266,7 +262,7 @@ export const PortfolioScreen: React.FC<Props> = ({ navigation }) => {
         )}
 
         {/* ── Export Buttons ── */}
-        <SectionHeader title="📤 Export" style={{ marginTop: Spacing.xl }} />
+        <SectionHeader title="Export" style={{ marginTop: Spacing.xl }} />
         <View style={styles.exportRow}>
           <TouchableOpacity
             style={styles.exportBtn}
@@ -287,8 +283,7 @@ export const PortfolioScreen: React.FC<Props> = ({ navigation }) => {
               <ActivityIndicator size="small" color={Colors.purple} />
             ) : (
               <>
-                <Text style={styles.exportIcon}>📄</Text>
-                <Text style={styles.exportLabel}>Report</Text>
+                <Text style={styles.exportLabel}>PDF Report</Text>
               </>
             )}
           </TouchableOpacity>
@@ -308,7 +303,6 @@ export const PortfolioScreen: React.FC<Props> = ({ navigation }) => {
             disabled={exporting}
             activeOpacity={0.7}
           >
-            <Text style={styles.exportIcon}>📊</Text>
             <Text style={styles.exportLabel}>CSV Data</Text>
           </TouchableOpacity>
         </View>
@@ -406,7 +400,7 @@ const styles = StyleSheet.create({
   },
   tdMono: { ...Typography.valueS, fontSize: 13 },
   deleteBtn: { width: 36, alignItems: 'center' },
-  deleteIcon: { fontSize: 14 },
+  deleteIcon: { fontSize: 12, color: Colors.muted, fontWeight: '700' },
 
   /* Empty */
   empty: { alignItems: 'center', paddingVertical: Spacing.xxxl },
@@ -436,6 +430,5 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
   },
-  exportIcon: { fontSize: 18 },
   exportLabel: { ...Typography.bodyS, color: Colors.textPrimary },
 });

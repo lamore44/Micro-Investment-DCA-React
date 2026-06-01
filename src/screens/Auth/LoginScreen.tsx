@@ -135,7 +135,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
           </TouchableOpacity>
 
           <Badge
-            label="🔒  Simulation Only · No Real Money"
+            label="Simulation Only · No Real Money"
             style={styles.badge}
           />
         </ScrollView>

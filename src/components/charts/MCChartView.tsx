@@ -33,7 +33,7 @@ export const MCChartView: React.FC<MCChartViewProps> = ({
     const minV = Math.min(...allV) * 0.88;
     const maxV = Math.max(...allV) * 1.06;
     const range = maxV - minV || 1;
-    const xOf = (i: number) => PAD.left + (i / (data.length - 1)) * Wi;
+    const xOf = (i: number) => PAD.left + (i / Math.max(data.length - 1, 1)) * Wi;
     const yOf = (v: number) => PAD.top + (1 - (v - minV) / range) * Hi;
     return { minV, maxV, xOf, yOf };
   }, [data]);
@@ -83,28 +83,34 @@ export const MCChartView: React.FC<MCChartViewProps> = ({
     return { label, y };
   });
 
+  // O(n) — berbasis index, tidak menggunakan indexOf
   const xStep = Math.max(1, Math.floor(data.length / 5));
-  const xLabels = data
-    .filter((_, i) => i % xStep === 0 || i === data.length - 1)
-    .map(d => ({
-      label: `M${d.month}`,
-      x: xOf(data.indexOf(d)),
-    }));
+  const xLabels = data.reduce<{ label: string; x: number }[]>((acc, d, i) => {
+    if (i % xStep === 0 || i === data.length - 1) {
+      acc.push({
+        label: d.month === 0 ? 'Start' : `M${d.month}`,
+        x: xOf(i),
+      });
+    }
+    return acc;
+  }, []);
+
+  const medianLine = line(d => d.median);
 
   return (
     <View>
       <Svg width={chartWidth} height={height}>
         <Defs>
           <SvgLinearGradient id="mcBest" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0%" stopColor={Colors.green} stopOpacity={0.18} />
+            <Stop offset="0%" stopColor={Colors.green} stopOpacity={0.22} />
             <Stop offset="100%" stopColor={Colors.green} stopOpacity={0.0} />
           </SvgLinearGradient>
           <SvgLinearGradient id="mcMid" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0%" stopColor={Colors.violet} stopOpacity={0.18} />
+            <Stop offset="0%" stopColor={Colors.violet} stopOpacity={0.20} />
             <Stop offset="100%" stopColor={Colors.violet} stopOpacity={0.0} />
           </SvgLinearGradient>
           <SvgLinearGradient id="mcWorst" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0%" stopColor={Colors.red} stopOpacity={0.12} />
+            <Stop offset="0%" stopColor={Colors.red} stopOpacity={0.16} />
             <Stop offset="100%" stopColor={Colors.red} stopOpacity={0.0} />
           </SvgLinearGradient>
         </Defs>
@@ -168,7 +174,7 @@ export const MCChartView: React.FC<MCChartViewProps> = ({
           fill="url(#mcWorst)"
         />
 
-        {/* Lines */}
+        {/* Lines — best, high, low, worst */}
         <Path
           {...line(d => d.best)}
           stroke={Colors.green}
@@ -182,12 +188,6 @@ export const MCChartView: React.FC<MCChartViewProps> = ({
           strokeWidth={1.2}
           fill="none"
           opacity={0.7}
-        />
-        <Path
-          {...line(d => d.median)}
-          stroke={Colors.purple}
-          strokeWidth={2.5}
-          fill="none"
         />
         <Path
           {...line(d => d.low, '5,3')}
@@ -204,16 +204,31 @@ export const MCChartView: React.FC<MCChartViewProps> = ({
           fill="none"
           opacity={0.7}
         />
+
+        {/* Median — glow layer + main line */}
+        <Path
+          d={medianLine.d}
+          stroke={Colors.purple}
+          strokeWidth={6}
+          fill="none"
+          opacity={0.15}
+        />
+        <Path
+          d={medianLine.d}
+          stroke={Colors.purple}
+          strokeWidth={3}
+          fill="none"
+        />
       </Svg>
 
       {/* Legend */}
       <View style={styles.legend}>
         {[
-          { color: Colors.green, label: 'Best (95%)' },
-          { color: Colors.violet, label: 'High (75%)' },
-          { color: Colors.purple, label: 'Median' },
-          { color: Colors.orange, label: 'Low (25%)' },
-          { color: Colors.red, label: 'Worst (5%)' },
+          { color: Colors.green,  label: '95th pct'    },
+          { color: Colors.violet, label: '75th pct'    },
+          { color: Colors.purple, label: 'Median (50th)' },
+          { color: Colors.orange, label: '25th pct'    },
+          { color: Colors.red,    label: '5th pct'     },
         ].map(item => (
           <View key={item.label} style={styles.legendItem}>
             <View style={[styles.legendDot, { backgroundColor: item.color }]} />

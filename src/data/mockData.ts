@@ -176,7 +176,7 @@ export const ASSET_PRICES: Record<Asset, number> = {
 // ── Quick preset strategies ──────────────────
 export const QUICK_PRESETS = [
   {
-    label: '⚡ Classic BTC DCA',
+    label: 'Classic BTC DCA',
     asset: 'BTC' as Asset,
     amount: 50,
     frequency: 'weekly' as Frequency,
@@ -184,7 +184,7 @@ export const QUICK_PRESETS = [
     endDate: '2024-01-01',
   },
   {
-    label: '⚡ ETH Bull Run',
+    label: 'ETH Bull Run',
     asset: 'ETH' as Asset,
     amount: 100,
     frequency: 'monthly' as Frequency,
@@ -192,7 +192,7 @@ export const QUICK_PRESETS = [
     endDate: '2021-11-01',
   },
   {
-    label: '⚡ SOL Micro DCA',
+    label: 'SOL Micro DCA',
     asset: 'SOL' as Asset,
     amount: 25,
     frequency: 'daily' as Frequency,
