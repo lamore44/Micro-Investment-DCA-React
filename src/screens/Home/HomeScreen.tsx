@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback, useRef } from 'react';
+import React, { useMemo, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -18,7 +18,7 @@ import { SectionHeader } from '../../components/common/SectionHeader';
 import { Button } from '../../components/common/Button';
 import { useAuth } from '../../hooks/useAuth';
 import { useStrategies } from '../../hooks/useStrategies';
-import { useRealtime, type RealtimePayload } from '../../hooks/useRealtime';
+import { useRealtime } from '../../hooks/useRealtime';
 import { Strategy, fmtUSD, fmtPct } from '../../data/mockData';
 
 interface Props {
@@ -65,9 +65,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     bestRoi,
     loading: strategiesLoading,
     error: strategiesError,
-    refresh: refreshStrategies,
   } = useStrategies();
-  const [notification, setNotification] = useState<string | null>(null);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [menuAnchor, setMenuAnchor] = useState<{
     top: number;
@@ -75,26 +73,8 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   } | null>(null);
   const avatarRef = useRef<TouchableOpacity>(null);
   const { user, signOut } = useAuth();
-  const handleRealtimeEvent = useCallback(
-    (payload: RealtimePayload) => {
-      const asset = (payload.data as any)?.asset || 'Unknown';
-      if (payload.event === 'INSERT') {
-        setNotification(
-          `New ${payload.table === 'strategies' ? 'strategy' : 'backtest'}: ${asset}`,
-        );
-      } else if (payload.event === 'UPDATE') {
-        setNotification(`${asset} strategy updated`);
-      }
-      refreshStrategies();
-      setTimeout(() => setNotification(null), 5000);
-    },
-    [refreshStrategies],
-  );
 
-  const { isConnected } = useRealtime({
-    onStrategyChange: handleRealtimeEvent,
-    onBacktestComplete: handleRealtimeEvent,
-  });
+  const { isConnected } = useRealtime();
 
   const overallRoi =
     totalInvested > 0
@@ -161,13 +141,6 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={S.safe}>
-      {/* ── Realtime notification banner ── */}
-      {notification && (
-        <View style={S.notifBanner}>
-          <Text style={S.notifText}>{notification}</Text>
-        </View>
-      )}
-
       <ScrollView
         contentContainerStyle={S.content}
         showsVerticalScrollIndicator={false}
@@ -357,18 +330,6 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
 const S = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.bgPrimary },
   content: { paddingHorizontal: Spacing.xl, paddingBottom: 40 },
-
-  /* Notification */
-  notifBanner: {
-    backgroundColor: Colors.purple,
-    paddingVertical: 10,
-    paddingHorizontal: Spacing.xl,
-  },
-  notifText: {
-    ...Typography.bodyS,
-    color: Colors.white,
-    textAlign: 'center',
-  },
 
   /* Header */
   header: {

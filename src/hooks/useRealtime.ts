@@ -29,9 +29,10 @@ export const useRealtime = (options: UseRealtimeOptions = {}) => {
   optionsRef.current = options;
 
   useEffect(() => {
-    // Subscribe to all relevant tables
+    // Subscribe to all relevant tables using a unique channel name to avoid subscription conflicts
+    const uniqueChannelName = `microdca-realtime-${Math.random().toString(36).slice(2, 9)}`;
     const channel = supabase
-      .channel('microdca-realtime')
+      .channel(uniqueChannelName)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'strategies' },

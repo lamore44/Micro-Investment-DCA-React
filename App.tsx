@@ -4,6 +4,8 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppNavigator } from './src/navigation/AppNavigator';
 import { AuthProvider } from './src/hooks/useAuth';
+import { StrategiesProvider } from './src/hooks/useStrategies';
+import { NotificationProvider } from './src/hooks/useNotification';
 import { Colors } from './src/theme';
 
 // Suppress known noisy warnings during development
@@ -22,7 +24,11 @@ const App: React.FC = () => {
           translucent={false}
         />
         <AuthProvider>
-          <AppNavigator />
+          <StrategiesProvider>
+            <NotificationProvider>
+              <AppNavigator />
+            </NotificationProvider>
+          </StrategiesProvider>
         </AuthProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

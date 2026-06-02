@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import { supabase } from '../services/api/supabase';
 import { useAuth } from './useAuth';
 import { Strategy, Frequency } from '../data/mockData';
@@ -38,7 +38,9 @@ const toFrequency = (value: string): Frequency => {
 };
 
 const normalizeDate = (value?: string | null): string => {
-  if (!value) return new Date().toISOString().slice(0, 10);
+  if (!value) {
+    return new Date().toISOString().slice(0, 10);
+  }
   return value.slice(0, 10);
 };
 
@@ -63,7 +65,23 @@ const estimateTotalInvested = (
   return amount * steps;
 };
 
-export const useStrategies = () => {
+interface StrategiesContextValue {
+  strategies: Strategy[];
+  saveStrategy: (s: Strategy) => Promise<void>;
+  removeStrategy: (id: string) => Promise<void>;
+  totalValue: number;
+  totalInvested: number;
+  avgRoi: number;
+  winners: number;
+  bestRoi: number;
+  loading: boolean;
+  error: string | null;
+  refresh: () => Promise<void>;
+}
+
+const StrategiesContext = createContext<StrategiesContextValue | undefined>(undefined);
+
+export const StrategiesProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { user } = useAuth();
   const [strategies, setStrategies] = useState<Strategy[]>([]);
   const [loading, setLoading] = useState(true);
@@ -82,9 +100,7 @@ export const useStrategies = () => {
 
     const { data: rows, error: rowsError } = await supabase
       .from('strategies')
-      .select(
-        'id, asset, amount_usd, frequency, start_date, end_date, created_at',
-      )
+      .select('id, asset, amount_usd, frequency, start_date, end_date, created_at')
       .order('created_at', { ascending: false });
 
     if (rowsError) {
@@ -104,9 +120,7 @@ export const useStrategies = () => {
     const ids = strategiesRows.map(row => row.id);
     const { data: backtests, error: backtestsError } = await supabase
       .from('backtest_results')
-      .select(
-        'strategy_id, total_invested, final_value, roi_pct, cagr_pct, max_drawdown_pct, sharpe_ratio, asset_acquired, run_at',
-      )
+      .select('strategy_id, total_invested, final_value, roi_pct, cagr_pct, max_drawdown_pct, sharpe_ratio, asset_acquired, run_at')
       .in('strategy_id', ids)
       .order('run_at', { ascending: false });
 
@@ -266,7 +280,9 @@ export const useStrategies = () => {
         .delete()
         .eq('id', id);
 
-      if (dbError) throw dbError;
+      if (dbError) {
+        throw dbError;
+      }
 
       setStrategies(prev => prev.filter(s => s.id !== id));
     } catch (e: any) {
@@ -284,17 +300,31 @@ export const useStrategies = () => {
     ? Math.max(...strategies.map(s => s.roi))
     : 0;
 
-  return {
-    strategies,
-    saveStrategy,
-    removeStrategy,
-    totalValue,
-    totalInvested,
-    avgRoi,
-    winners,
-    bestRoi,
-    loading,
-    error,
-    refresh: loadStrategies,
-  };
+  return (
+    <StrategiesContext.Provider
+      value={{
+        strategies,
+        saveStrategy,
+        removeStrategy,
+        totalValue,
+        totalInvested,
+        avgRoi,
+        winners,
+        bestRoi,
+        loading,
+        error,
+        refresh: loadStrategies,
+      }}
+    >
+      {children}
+    </StrategiesContext.Provider>
+  );
+};
+
+export const useStrategies = (): StrategiesContextValue => {
+  const context = useContext(StrategiesContext);
+  if (!context) {
+    throw new Error('useStrategies must be used within a StrategiesProvider');
+  }
+  return context;
 };
