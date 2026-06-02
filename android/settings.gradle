@@ -1,11 +1,12 @@
 pluginManagement {
-    includeBuild("../node_modules/@react-native/gradle-plugin")
     repositories {
         google()
         mavenCentral()
         gradlePluginPortal()
     }
+    includeBuild("../node_modules/@react-native/gradle-plugin")
 }
+
 
 rootProject.name = 'MicroDCA'
 include ':app'

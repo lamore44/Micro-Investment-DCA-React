@@ -21,22 +21,22 @@ const AuthStack = createStackNavigator();
 const Tab       = createBottomTabNavigator();
 const RootStack = createStackNavigator();
 
-type TabIconProps = { focused: boolean; emoji: string; label: string };
-const TabIcon: React.FC<TabIconProps> = ({ focused, emoji, label }) => (
+type TabIconProps = { focused: boolean; mark: string; label: string };
+const TabIcon: React.FC<TabIconProps> = ({ focused, mark, label }) => (
   <View style={tabStyles.wrap}>
-    <Text style={[tabStyles.emoji, !focused && tabStyles.emojiDim]}>{emoji}</Text>
+    <Text style={[tabStyles.mark, focused && tabStyles.markActive]}>{mark}</Text>
     <Text style={[tabStyles.label, focused && tabStyles.labelActive]}>{label}</Text>
     {focused && <View style={tabStyles.indicator} />}
   </View>
 );
 
 const tabStyles = StyleSheet.create({
-  wrap:          { alignItems: 'center', justifyContent: 'center', paddingTop: 8, width: 60, position: 'relative' },
-  emoji:         { fontSize: 20 },
-  emojiDim:      { opacity: 0.4 },
-  label:         { fontSize: 10, color: Colors.muted, fontWeight: '500', marginTop: 3 },
-  labelActive:   { color: Colors.purple, fontWeight: '700' },
-  indicator:     { position: 'absolute', bottom: -8, width: 4, height: 4, borderRadius: 2, backgroundColor: Colors.purple },
+  wrap:        { alignItems: 'center', justifyContent: 'center', paddingTop: 8, width: 60, position: 'relative' },
+  mark:        { fontSize: 16, color: Colors.muted, fontWeight: '600' },
+  markActive:  { color: Colors.purple },
+  label:       { fontSize: 10, color: Colors.muted, fontWeight: '500', marginTop: 3 },
+  labelActive: { color: Colors.purple, fontWeight: '700' },
+  indicator:   { position: 'absolute', bottom: -8, width: 4, height: 4, borderRadius: 2, backgroundColor: Colors.purple },
 });
 
 const MainTabs: React.FC = () => (
@@ -54,9 +54,9 @@ const MainTabs: React.FC = () => (
       tabBarShowLabel: false,
     }}
   >
-    <Tab.Screen name="Home"      component={HomeScreen}      options={{ tabBarIcon: ({ focused }) => <TabIcon focused={focused} emoji="🏠" label="Home" /> }} />
-    <Tab.Screen name="Builder"   component={BuilderScreen}   options={{ tabBarIcon: ({ focused }) => <TabIcon focused={focused} emoji="⚙️" label="Builder" /> }} />
-    <Tab.Screen name="Portfolio" component={PortfolioScreen} options={{ tabBarIcon: ({ focused }) => <TabIcon focused={focused} emoji="💼" label="Portfolio" /> }} />
+    <Tab.Screen name="Home"      component={HomeScreen}      options={{ tabBarIcon: ({ focused }) => <TabIcon focused={focused} mark="~" label="Home" /> }} />
+    <Tab.Screen name="Builder"   component={BuilderScreen}   options={{ tabBarIcon: ({ focused }) => <TabIcon focused={focused} mark="+" label="Builder" /> }} />
+    <Tab.Screen name="Portfolio" component={PortfolioScreen} options={{ tabBarIcon: ({ focused }) => <TabIcon focused={focused} mark="%" label="Portfolio" /> }} />
   </Tab.Navigator>
 );
 
@@ -108,7 +108,7 @@ export const AppNavigator: React.FC = () => {
             <RootStack.Screen name="Main"  component={MainTabs}  options={{ animationTypeForReplace: 'push' }} />
             <RootStack.Screen name="Backtest"   component={BacktestScreen}   options={{ ...HEADER_OPTS, headerTitle: 'Backtest Results' }} />
             <RootStack.Screen name="MonteCarlo" component={MonteCarloScreen} options={{ ...HEADER_OPTS, headerTitle: 'Monte Carlo Forecast' }} />
-            <RootStack.Screen name="DataLayerTest" component={DataLayerTestScreen} options={{ ...HEADER_OPTS, headerTitle: '🧪 Data Layer Tests' }} />
+            <RootStack.Screen name="DataLayerTest" component={DataLayerTestScreen} options={{ ...HEADER_OPTS, headerTitle: 'Data Layer Tests' }} />
           </>
         ) : (
           <RootStack.Screen name="Auth" component={AuthNavigator} options={{ animationTypeForReplace: 'pop' }} />

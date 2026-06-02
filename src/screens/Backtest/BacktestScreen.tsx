@@ -38,7 +38,7 @@ export const BacktestScreen: React.FC<Props> = ({ navigation, route }) => {
     try {
       await saveStrategy(strategy);
       setSaved(true);
-      Alert.alert('✓ Saved', 'Strategy saved to your Portfolio.');
+      Alert.alert('Saved', 'Strategy saved to your Portfolio.');
     } catch (e: any) {
       Alert.alert('Save Failed', e.message || 'An error occurred while saving.');
     } finally {
@@ -74,7 +74,7 @@ export const BacktestScreen: React.FC<Props> = ({ navigation, route }) => {
               <ActivityIndicator size="small" color={Colors.purple} />
             ) : (
               <Text style={[S.saveTxt, saved && S.saveTxtDone]}>
-                {saved ? '✓ Saved' : '💾 Save'}
+                {saved ? 'Saved' : 'Save'}
               </Text>
             )}
           </TouchableOpacity>
@@ -82,20 +82,20 @@ export const BacktestScreen: React.FC<Props> = ({ navigation, route }) => {
 
         {/* ── Metrics grid ── */}
         <View style={S.row}>
-          <MetricCard icon="💰" label="Total Invested"  value={fmtUSD(strategy.totalInvested)}  flex={1} />
+          <MetricCard label="Total Invested"  value={fmtUSD(strategy.totalInvested)}  flex={1} />
           <View style={S.gap} />
-          <MetricCard icon="📈" label="Portfolio Value" value={fmtUSD(strategy.finalValue)} valueColor={isPos ? Colors.green : Colors.red} flex={1} />
+          <MetricCard label="Portfolio Value" value={fmtUSD(strategy.finalValue)} valueColor={isPos ? Colors.green : Colors.red} flex={1} />
         </View>
         <View style={[S.row, S.rowMt]}>
-          <MetricCard icon="%" label="ROI"  value={fmtPct(strategy.roi)}  valueColor={isPos ? Colors.green : Colors.red} flex={1} />
+          <MetricCard label="ROI"  value={fmtPct(strategy.roi)}  valueColor={isPos ? Colors.green : Colors.red} flex={1} />
           <View style={S.gap} />
-          <MetricCard icon="📅" label="CAGR" value={fmtPct(strategy.cagr)} valueColor={strategy.cagr >= 0 ? Colors.green : Colors.red} sub="Annualized" flex={1} />
+          <MetricCard label="CAGR" value={fmtPct(strategy.cagr)} valueColor={strategy.cagr >= 0 ? Colors.green : Colors.red} sub="Annualized" flex={1} />
         </View>
         <View style={[S.row, S.rowMt]}>
-          <MetricCard icon="📉" label="Max Drawdown"  value={`-${strategy.maxDrawdown.toFixed(1)}%`} valueColor={Colors.red}  sub="Peak-to-trough" flex={1} />
+          <MetricCard label="Max Drawdown"  value={`-${strategy.maxDrawdown.toFixed(1)}%`} valueColor={Colors.red}  sub="Peak-to-trough" flex={1} />
           <View style={S.gap} />
           <MetricCard
-            icon="⚖️" label="Sharpe Ratio"
+            label="Sharpe Ratio"
             value={strategy.sharpeRatio.toFixed(2)}
             valueColor={strategy.sharpeRatio > 1 ? Colors.green : strategy.sharpeRatio > 0 ? Colors.violet : Colors.red}
             sub="Risk-adjusted"
@@ -103,9 +103,9 @@ export const BacktestScreen: React.FC<Props> = ({ navigation, route }) => {
           />
         </View>
         <View style={[S.row, S.rowMt]}>
-          <MetricCard icon="🪙" label={`${strategy.asset} Coins`} value={fmtCoins(strategy.totalCoins, strategy.asset)} sub={`avg ${fmtUSD(strategy.totalInvested / strategy.totalCoins)} buy`} flex={1} />
+          <MetricCard label={`${strategy.asset} Coins`} value={fmtCoins(strategy.totalCoins, strategy.asset)} sub={`avg ${fmtUSD(strategy.totalInvested / strategy.totalCoins)} buy`} flex={1} />
           <View style={S.gap} />
-          <MetricCard icon="💹" label="Profit / Loss" value={fmtUSD(Math.abs(pnl))} valueColor={pnl >= 0 ? Colors.green : Colors.red} sub={pnl >= 0 ? 'net profit' : 'net loss'} flex={1} />
+          <MetricCard label="Profit / Loss" value={fmtUSD(Math.abs(pnl))} valueColor={pnl >= 0 ? Colors.green : Colors.red} sub={pnl >= 0 ? 'net profit' : 'net loss'} flex={1} />
         </View>
 
         {/* ── Portfolio growth chart ── */}
@@ -133,7 +133,7 @@ export const BacktestScreen: React.FC<Props> = ({ navigation, route }) => {
         {/* ── Action buttons ── */}
         <View style={S.actionsContainer}>
           <TouchableOpacity style={S.primaryActionBtn} onPress={goMC} activeOpacity={0.8}>
-            <Text style={S.primaryActionBtnText}>📊  View Monte Carlo Forecast</Text>
+            <Text style={S.primaryActionBtnText}>View Monte Carlo Forecast</Text>
           </TouchableOpacity>
           <View style={S.secondaryActionsRow}>
             <TouchableOpacity
@@ -147,7 +147,7 @@ export const BacktestScreen: React.FC<Props> = ({ navigation, route }) => {
               }}
               activeOpacity={0.8}
             >
-              <Text style={S.secondaryActionBtnText}>📄  PDF Report</Text>
+              <Text style={S.secondaryActionBtnText}>PDF Report</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={S.secondaryActionBtn}
@@ -160,7 +160,7 @@ export const BacktestScreen: React.FC<Props> = ({ navigation, route }) => {
               }}
               activeOpacity={0.8}
             >
-              <Text style={S.secondaryActionBtnText}>📊  CSV Data</Text>
+              <Text style={S.secondaryActionBtnText}>CSV Data</Text>
             </TouchableOpacity>
           </View>
         </View>

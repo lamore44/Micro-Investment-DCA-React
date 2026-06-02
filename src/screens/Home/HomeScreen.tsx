@@ -73,21 +73,17 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     top: number;
     right: number;
   } | null>(null);
-  const avatarRef = useRef<null | {
-    measureInWindow: (
-      cb: (x: number, y: number, width: number, height: number) => void,
-    ) => void;
-  }>(null);
+  const avatarRef = useRef<TouchableOpacity>(null);
   const { user, signOut } = useAuth();
   const handleRealtimeEvent = useCallback(
     (payload: RealtimePayload) => {
       const asset = (payload.data as any)?.asset || 'Unknown';
       if (payload.event === 'INSERT') {
         setNotification(
-          `📊 New ${payload.table === 'strategies' ? 'strategy' : 'backtest'}: ${asset}`,
+          `New ${payload.table === 'strategies' ? 'strategy' : 'backtest'}: ${asset}`,
         );
       } else if (payload.event === 'UPDATE') {
-        setNotification(`🔄 ${asset} strategy updated`);
+        setNotification(`${asset} strategy updated`);
       }
       refreshStrategies();
       setTimeout(() => setNotification(null), 5000);
@@ -189,7 +185,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                   { backgroundColor: isConnected ? Colors.green : Colors.red },
                 ]}
               />
-              <Text style={S.greeting}>Hello, {displayName} 👋</Text>
+              <Text style={S.greeting}>Hello, {displayName}</Text>
             </View>
             <Text style={S.greetSub}>Your DCA simulation hub</Text>
           </View>
@@ -245,11 +241,11 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
         {/* ── Quick stat row ── */}
         <View style={S.statsRow}>
           <Card style={[S.statCard, { marginRight: 8 }]}>
-            <Text style={S.statLabel}>📋 STRATEGIES</Text>
+            <Text style={S.statLabel}>STRATEGIES</Text>
             <Text style={S.statVal}>{strategies.length}</Text>
           </Card>
           <Card style={[S.statCard, { marginLeft: 8 }]}>
-            <Text style={S.statLabel}>🚀 BEST ROI</Text>
+            <Text style={S.statLabel}>BEST ROI</Text>
             <Text
               style={[
                 S.statVal,
@@ -286,7 +282,6 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
           </View>
         ) : strategies.length === 0 ? (
           <View style={S.empty}>
-            <Text style={S.emptyIcon}>📂</Text>
             <Text style={S.emptyText}>
               No strategies yet.{'\n'}Tap Builder to create one.
             </Text>
@@ -323,7 +318,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
           onPress={() => navigation.navigate('DataLayerTest')}
           activeOpacity={0.7}
         >
-          <Text style={S.devTestText}>🧪 Test Data Layer</Text>
+          <Text style={S.devTestText}>Test Data Layer</Text>
         </TouchableOpacity>
       </ScrollView>
 
@@ -509,7 +504,6 @@ const S = StyleSheet.create({
 
   /* Empty */
   empty: { alignItems: 'center', paddingVertical: 40 },
-  emptyIcon: { fontSize: 36, marginBottom: 12 },
   emptyText: {
     ...Typography.bodyS,
     color: Colors.muted,
