@@ -220,11 +220,12 @@ MicroDCA/
 - [x] CI/CD pipeline (lint + bundle check + APK build)
 - [x] Store strategies & backtest results in Supabase PostgreSQL
 - [x] Monte Carlo parameters data layer ($\mu$ & $\sigma$ calculations) and cache utility (`src/services/marketRepository.ts`)
+- [x] Monte Carlo GBM simulation engine (Jaki) & UI integration (Gian) (`src/services/simulation/gbmSimulator.ts` & `MonteCarloScreen.tsx`)
 
 ### 🚧 In Progress / Next
-- [ ] Monte Carlo GBM simulation engine (Jaki) & UI integration (Gian)
-- [ ] Implement sync with `react-native-background-fetch` + NetInfo listener
-- [ ] Push notifications via Firebase Cloud Messaging (FCM)
+- [ ] Store Monte Carlo projections (`mc_projections`) in Supabase PostgreSQL (Aril)
+- [ ] Implement sync with `react-native-background-fetch` + NetInfo listener (Aril)
+- [ ] Push notifications via Firebase Cloud Messaging (FCM) (Aril & Gian)
 
 ---
 
