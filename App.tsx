@@ -1,5 +1,5 @@
-import React from 'react';
-import { StatusBar, LogBox } from 'react-native';
+import React, { useEffect } from 'react';
+import { StatusBar, LogBox, PermissionsAndroid, Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppNavigator } from './src/navigation/AppNavigator';
@@ -15,6 +15,29 @@ LogBox.ignoreLogs([
 ]);
 
 const App: React.FC = () => {
+  useEffect(() => {
+    const requestAppPermissions = async () => {
+      if (Platform.OS === 'android') {
+        try {
+          const permissions = [
+            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          ];
+
+          // Android 13+ (API 33+) requires runtime permission for notifications
+          if (Number(Platform.Version) >= 33) {
+            permissions.push(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
+          }
+
+          await PermissionsAndroid.requestMultiple(permissions);
+        } catch (err) {
+          console.warn(err);
+        }
+      }
+    };
+
+    requestAppPermissions();
+  }, []);
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
